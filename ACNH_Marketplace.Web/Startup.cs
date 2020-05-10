@@ -4,13 +4,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using ACNH_Marketplace.DataBase;
 using ACNH_Marketplace.Telegram;
+using ACNH_Marketplace.Telegram.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ACNH_Marketplace.Web
 {
@@ -28,14 +31,17 @@ namespace ACNH_Marketplace.Web
             services.AddDbContext<MarketplaceContext>(options =>
                 options.UseMySQL(Configuration.GetConnectionString("MarketplaceDatabase")));
 
-            services.AddRazorPages();
+            services.AddControllers().AddNewtonsoftJson();
 
             var botConfiguration = new BotConfiguration();
             Configuration.GetSection("TelegramBot").Bind(botConfiguration);
             services.AddSingleton(botConfiguration);
 
-            services.AddSingleton<MarketplaceBot>();
-            services.AddHostedService<TelegramBotService>();
+            services.AddSingleton<UserContextProvider>();
+            services.AddSingleton<IBotService, BotService>();
+            services.AddScoped<IBotUpdateService, BotUpdateService>();
+
+            services.AddHostedService<ActivatorService>(); //Activate IBotService
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -44,22 +50,18 @@ namespace ACNH_Marketplace.Web
             {
                 app.UseDeveloperExceptionPage();
             }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                app.UseHsts();
-            }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            //app.UseAuthorization();
+
+            app.UseMiddleware<RequestLoggingMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapRazorPages();
+                endpoints.MapControllers();
             });
         }
     }

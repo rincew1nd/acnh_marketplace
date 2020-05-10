@@ -1,11 +1,12 @@
 ﻿using ACNH_Marketplace.DataBase;
-using ACNH_Marketplace.DataBase.Models;
-using ACNH_Marketplace.Telegram.Commands;
+using ACNH_Marketplace.Telegram._commands.Registration;
+using ACNH_Marketplace.Telegram.Commands.CommandBase;
+using ACNH_Marketplace.Telegram.Enums;
+using ACNH_Marketplace.Telegram.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using Telegram.Bot;
 
@@ -13,7 +14,7 @@ namespace ACNH_Marketplace.Telegram.Helpers
 {
     static class CommandHelpers
     {
-        public static Type[] GetCommand(string command, bool onlyOne = true)
+        public static Type[] GetCommandType(UserStateEnum userState, string command, bool onlyOne = true)
         {
             var types = new List<Type>();
 
@@ -22,7 +23,8 @@ namespace ACNH_Marketplace.Telegram.Helpers
                 var attribute = type.GetCustomAttribute<CommandAttribute>(false);
                 if (attribute != null)
                 {
-                    if (Regex.IsMatch(command, attribute.Regex))
+                    if (attribute.Locators.ContainsKey(userState) &&
+                        Regex.IsMatch(command, attribute.Locators[userState]))
                     {
                         types.Add(type);
                     }
@@ -30,7 +32,7 @@ namespace ACNH_Marketplace.Telegram.Helpers
             }
 
             if (!types.Any())
-                throw new CommandNotFoundException();
+                return new[] { typeof(WelcomeCommand) };
 
             if (types.Count > 1 && onlyOne)
                 throw new ApplicationException("Found more than one types");
@@ -38,7 +40,7 @@ namespace ACNH_Marketplace.Telegram.Helpers
             return types.ToArray();
         }
 
-        public static Type[] FindAllCommands()
+        public static Type[] FindAllCommandTypes()
         {
             var types = new List<Type>();
 
@@ -53,9 +55,11 @@ namespace ACNH_Marketplace.Telegram.Helpers
             return types.ToArray();
         }
 
-        public static BaseCommand CreateCommand(Type type, User user, TelegramBotClient client, MarketplaceContext context)
+        public static ICommand CreateCommand(
+            Type type, IBotService botService, MarketplaceContext context,
+            UserContext userContext, string command)
         {
-            return (BaseCommand) Activator.CreateInstance(type, client, context, user);
+            return (ICommand) Activator.CreateInstance(type, botService, context, userContext, command);
         }
     }
 }

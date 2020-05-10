@@ -13,13 +13,20 @@ namespace ACNH_Marketplace.Web
     {
         public static void Main(string[] args)
         {
+            CreateHostBuilder(args).Build().Run();
+        }
+
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
-                })
-                .Build()
-                .Run();
-        }
+                    webBuilder.UseStartup<Startup>()
+#if (DEBUG)
+                              .UseUrls("https://*:5003", "http://*:5002");
+#elif (RELEASE)
+                              .UseUrls("https://*:5001", "http://*:5000");
+#endif
+
+                });
     }
 }
