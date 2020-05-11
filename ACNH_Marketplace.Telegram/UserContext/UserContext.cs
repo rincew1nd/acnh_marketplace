@@ -1,5 +1,6 @@
 ﻿using ACNH_Marketplace.DataBase.Models;
 using ACNH_Marketplace.Telegram.Enums;
+using System;
 using System.Collections.Generic;
 
 namespace ACNH_Marketplace.Telegram
@@ -18,7 +19,9 @@ namespace ACNH_Marketplace.Telegram
                 {
                     { UserContextEnum.UserState, UserStateEnum.Default },
                     { UserContextEnum.InGameName, user.InGameName },
-                    { UserContextEnum.IslandName, user.IslandName }
+                    { UserContextEnum.IslandName, user.IslandName },
+                    { UserContextEnum.UTC, user.Timezone },
+                    { UserContextEnum.UserName, user.UserName }
                 };
             }
             else
@@ -32,7 +35,10 @@ namespace ACNH_Marketplace.Telegram
 
         public T GetContext<T>(UserContextEnum ucEnum)
         {
-            return (T)_userContext[ucEnum];
+            if (_userContext.ContainsKey(ucEnum))
+                return (T)_userContext[ucEnum];
+            else
+                return default(T);
         }
 
         public bool SetContext<T>(UserContextEnum ucEnum, T obj)

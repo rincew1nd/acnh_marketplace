@@ -18,7 +18,8 @@ For registration you should provide your in game name (IGN) and island name.";
 
         private const string RegistrationConfirmation = @"Does it correct:
 IGN - {0}
-Island Name - {1}";
+Island Name - {1}
+Timezone(UTC) - {2}";
         private const string MainMenuMessage = @"Host or visit turnip exchange?";
 
         public WelcomeCommand(IBotService botService, MarketplaceContext context, UserContext userContext, string command) :
@@ -47,6 +48,9 @@ Island Name - {1}";
                             break;
                         case UserStateEnum.EnteringIslandName:
                             await SetIslandName();
+                            break;
+                        case UserStateEnum.EnteringUTC:
+                            await SetTimeZone();
                             break;
                     }
                     break;
@@ -127,29 +131,65 @@ Island Name - {1}";
             );
         }
 
-        private async Task SetIslandName()
+        private async Task SetIslandName(bool again = false)
         {
-            _userContext.SetContext(UserContextEnum.IslandName, _command);
-            var ign = _userContext.GetContext<string>(UserContextEnum.InGameName);
-            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.ConfirmRegistration);
+            if (!again)
+            {
+                _userContext.SetContext(UserContextEnum.IslandName, _command);
+                _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringUTC);
+            }
 
             await _client.SendTextMessageAsync(
                 chatId: _userContext.UserId,
-                text: string.Format(RegistrationConfirmation, ign, _command),
-                replyMarkup: new ReplyKeyboardMarkup(
-                    new KeyboardButton[][]
-                    {
-                        new KeyboardButton[] { "Yes", "No" }
-                    },
-                    true, true
-                )
+                text: "Enter your timezone (-14 < UTC±0 < 14):",
+                replyMarkup: new ForceReplyMarkup()
             );
+        }
+
+        public async Task SetTimeZone()
+        {
+            var result = int.TryParse(_command, out var timezone);
+            if (!result || timezone < -14 || timezone > 14)
+            {
+                await _client.SendTextMessageAsync(
+                    chatId: _userContext.UserId,
+                    text: $"'{_command}' is not a number. Only numbers from -14 to 14 acceptable."
+                );
+                await SetIslandName(true);
+            }
+            else
+            {
+                _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.ConfirmRegistration);
+                _userContext.SetContext(UserContextEnum.UTC, timezone);
+
+                var ign = _userContext.GetContext<string>(UserContextEnum.InGameName);
+                var islandName = _userContext.GetContext<string>(UserContextEnum.IslandName);
+
+                await _client.SendTextMessageAsync(
+                    chatId: _userContext.UserId,
+                    text: string.Format(RegistrationConfirmation, ign, islandName, _command),
+                    replyMarkup: new ReplyKeyboardMarkup(
+                        new KeyboardButton[][]
+                        {
+                            new KeyboardButton[] { "Yes", "No" }
+                        },
+                        true, true
+                    )
+                );
+            }
         }
 
         private async Task CreateOrUpdateUser()
         {
             var ign = _userContext.GetContext<string>(UserContextEnum.InGameName);
             var islandName = _userContext.GetContext<string>(UserContextEnum.IslandName);
+            var timezone = _userContext.GetContext<int>(UserContextEnum.UTC);
+
+            var username = $"{_update.Message.From.FirstName} {_update.Message.From.LastName}";
+            if (!string.IsNullOrWhiteSpace(_update.Message.From.Username))
+            {
+                username = $"{_update.Message.From.Username} ({username})";
+            }
 
             var user = _context.Users.Find(_userContext.UserId);
             if (user == null)
@@ -159,6 +199,8 @@ Island Name - {1}";
                     Id = _userContext.UserId,
                     InGameName = ign,
                     IslandName = islandName,
+                    UserName = username,
+                    Timezone = timezone,
                     LastActiveDate = DateTime.Now
                 });
             }
@@ -166,6 +208,8 @@ Island Name - {1}";
             {
                 user.InGameName = ign;
                 user.IslandName = islandName;
+                user.UserName = username;
+                user.Timezone = timezone;
                 user.LastActiveDate = DateTime.Now;
                 _context.Update(user);
             }

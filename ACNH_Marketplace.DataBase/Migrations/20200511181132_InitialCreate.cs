@@ -16,6 +16,8 @@ namespace ACNH_Marketplace.DataBase.Migrations
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
                     InGameName = table.Column<string>(nullable: true),
                     IslandName = table.Column<string>(nullable: true),
+                    UserName = table.Column<string>(nullable: true),
+                    Timezone = table.Column<int>(nullable: false),
                     LastActiveDate = table.Column<DateTime>(nullable: false),
                     HosterRating = table.Column<float>(nullable: false),
                     VisitorRating = table.Column<float>(nullable: false),
@@ -68,7 +70,7 @@ namespace ACNH_Marketplace.DataBase.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserRevies",
+                name: "UserReviews",
                 columns: table => new
                 {
                     Id = table.Column<byte[]>(nullable: false),
@@ -80,15 +82,15 @@ namespace ACNH_Marketplace.DataBase.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserRevies", x => x.Id);
+                    table.PrimaryKey("PK_UserReviews", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_UserRevies_Users_ReviewedId",
+                        name: "FK_UserReviews_Users_ReviewedId",
                         column: x => x.ReviewedId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserRevies_Users_ReviewerId",
+                        name: "FK_UserReviews_Users_ReviewerId",
                         column: x => x.ReviewerId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -144,13 +146,13 @@ namespace ACNH_Marketplace.DataBase.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserRevies_ReviewedId",
-                table: "UserRevies",
+                name: "IX_UserReviews_ReviewedId",
+                table: "UserReviews",
                 column: "ReviewedId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserRevies_ReviewerId",
-                table: "UserRevies",
+                name: "IX_UserReviews_ReviewerId",
+                table: "UserReviews",
                 column: "ReviewerId");
         }
 
@@ -160,7 +162,7 @@ namespace ACNH_Marketplace.DataBase.Migrations
                 name: "TurnipEntryFees");
 
             migrationBuilder.DropTable(
-                name: "UserRevies");
+                name: "UserReviews");
 
             migrationBuilder.DropTable(
                 name: "TurnipMarketHosters");

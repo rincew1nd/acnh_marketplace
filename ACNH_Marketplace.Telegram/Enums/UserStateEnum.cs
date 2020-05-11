@@ -13,5 +13,13 @@
 
         //Host turnip
         HostTurnipExchange,
+        EnteringUTC,
+        EnteringHTEDescription,
+        EnteringHTEDate,
+        EnteringHTEPrice,
+        ConfirmHTERegistration,
+        EditHTEDate,
+        EditHTEPrice,
+        EditHTEDescription,
     }
 }

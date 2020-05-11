@@ -22,6 +22,27 @@
       "^/HostTurnip": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand",
       "^/EditHTE.*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand",
       "^/NewHTE.*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
+    },
+    "EnteringHTEDate": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
+    },
+    "EnteringHTEPrice": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
+    },
+    "EnteringHTEDescription": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
+    },
+    "EditHTEDate": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
+    },
+    "EditHTEPrice": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
+    },
+    "EditHTEDescription": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
+    },
+    "ConfirmHTERegistration": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
     }
   }
 }

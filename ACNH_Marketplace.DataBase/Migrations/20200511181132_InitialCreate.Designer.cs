@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ACNH_Marketplace.DataBase.Migrations
 {
     [DbContext(typeof(MarketplaceContext))]
-    [Migration("20200505192514_InitialCreate")]
+    [Migration("20200511181132_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -117,6 +117,12 @@ namespace ACNH_Marketplace.DataBase.Migrations
                     b.Property<DateTime>("LastActiveDate")
                         .HasColumnType("datetime");
 
+                    b.Property<int>("Timezone")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text");
+
                     b.Property<float>("VisitorRating")
                         .HasColumnType("float");
 
@@ -152,7 +158,7 @@ namespace ACNH_Marketplace.DataBase.Migrations
 
                     b.HasIndex("ReviewerId");
 
-                    b.ToTable("UserRevies");
+                    b.ToTable("UserReviews");
                 });
 
             modelBuilder.Entity("ACNH_Marketplace.DataBase.Models.TurnipEntryFee", b =>

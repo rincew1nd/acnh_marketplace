@@ -115,6 +115,12 @@ namespace ACNH_Marketplace.DataBase.Migrations
                     b.Property<DateTime>("LastActiveDate")
                         .HasColumnType("datetime");
 
+                    b.Property<int>("Timezone")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text");
+
                     b.Property<float>("VisitorRating")
                         .HasColumnType("float");
 
@@ -150,7 +156,7 @@ namespace ACNH_Marketplace.DataBase.Migrations
 
                     b.HasIndex("ReviewerId");
 
-                    b.ToTable("UserRevies");
+                    b.ToTable("UserReviews");
                 });
 
             modelBuilder.Entity("ACNH_Marketplace.DataBase.Models.TurnipEntryFee", b =>

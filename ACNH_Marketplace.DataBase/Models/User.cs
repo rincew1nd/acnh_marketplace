@@ -21,7 +21,17 @@ namespace ACNH_Marketplace.DataBase.Models
         /// Game island name
         /// </summary>
         public string IslandName { get; set; }
+
+        /// <summary>
+        /// User name
+        /// </summary>
+        public string UserName { get; set; }
         
+        /// <summary>
+        /// User GTM
+        /// </summary>
+        public int Timezone { get; set; }
+
         /// <summary>
         /// When user was active last time
         /// </summary>
