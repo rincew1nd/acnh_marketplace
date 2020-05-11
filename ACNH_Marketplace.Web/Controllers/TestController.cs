@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ACNH_Marketplace.DataBase;
+﻿using ACNH_Marketplace.DataBase;
 using ACNH_Marketplace.DataBase.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace ACNH_Marketplace.Web.Controllers
 {
@@ -13,7 +9,7 @@ namespace ACNH_Marketplace.Web.Controllers
     [ApiController]
     public class TestController : ControllerBase
     {
-        private MarketplaceContext _context;
+        private readonly MarketplaceContext _context;
 
         public TestController(MarketplaceContext context)
         {

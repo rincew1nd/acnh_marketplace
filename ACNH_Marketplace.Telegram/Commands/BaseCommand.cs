@@ -16,6 +16,7 @@ namespace ACNH_Marketplace.Telegram.Commands.CommandBase
         protected readonly UserContext _userContext;
         protected readonly string _command;
         protected readonly UserStateEnum _userState;
+        protected Update _update;
 
         public BaseCommand(IBotService botService, MarketplaceContext context, UserContext userContext, string command)
         {

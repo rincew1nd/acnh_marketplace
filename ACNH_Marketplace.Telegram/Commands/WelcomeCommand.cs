@@ -5,12 +5,12 @@ using ACNH_Marketplace.Telegram.Services;
 using System;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using User = ACNH_Marketplace.DataBase.Models.User;
 
-namespace ACNH_Marketplace.Telegram._commands.Registration
+namespace ACNH_Marketplace.Telegram.Commands
 {
-    [Command("Default=^[^/].*;Welcome=.*;EnteringIGName=.*;EnteringIslandName=.*;ConfirmRegistration=.*")]
     public class WelcomeCommand : BaseCommand
     {
         private const string WelcomeMessage = @"Befor we start:
@@ -19,8 +19,7 @@ For registration you should provide your in game name (IGN) and island name.";
         private const string RegistrationConfirmation = @"Does it correct:
 IGN - {0}
 Island Name - {1}";
-
-        private Update _update;
+        private const string MainMenuMessage = @"Host or visit turnip exchange?";
 
         public WelcomeCommand(IBotService botService, MarketplaceContext context, UserContext userContext, string command) :
             base(botService, context, userContext, command)
@@ -31,36 +30,58 @@ Island Name - {1}";
         {
             _update = update;
 
-            if (update.Message != null)
+            switch (update.Type)
             {
-                switch (_userState)
-                {
-                    case UserStateEnum.Default:
-                        await SendMenu();
-                        break;
-                    case UserStateEnum.ConfirmRegistration:
-                    case UserStateEnum.Welcome:
-                        await SendWelcomeMessage(_userState);
-                        break;
-                    case UserStateEnum.EnteringIGName:
-                        await SetIGN();
-                        break;
-                    case UserStateEnum.EnteringIslandName:
-                        await SetIslandName();
-                        break;
-                }
+                case UpdateType.Message:
+                    switch (_userState)
+                    {
+                        case UserStateEnum.Default:
+                            await SendMenu();
+                            break;
+                        case UserStateEnum.ConfirmRegistration:
+                        case UserStateEnum.Welcome:
+                            await SendWelcomeMessage(_userState);
+                            break;
+                        case UserStateEnum.EnteringIGName:
+                            await SetIGN();
+                            break;
+                        case UserStateEnum.EnteringIslandName:
+                            await SetIslandName();
+                            break;
+                    }
+                    break;
+                case UpdateType.CallbackQuery:
+                    await UpdateMenu();
+                    break;
             }
         }
 
         private async Task SendMenu()
         {
+            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.Default);
             await _client.SendTextMessageAsync(
                 chatId: _userContext.UserId,
-                text: "Host or visit turnip exchange?",
+                text: MainMenuMessage,
                 replyMarkup: new InlineKeyboardMarkup(
                     new[] {
-                        new InlineKeyboardButton() { Text = "Host turnip exchange", CallbackData = "/hostturnip" },
-                        new InlineKeyboardButton() { Text = "Visit turnip exchange", CallbackData = "/visitturnip" }
+                        new InlineKeyboardButton() { Text = "Host turnip exchange", CallbackData = "/HostTurnip" },
+                        new InlineKeyboardButton() { Text = "Visit turnip exchange", CallbackData = "/VisitTurnip" }
+                    }
+                )
+            );
+        }
+
+        private async Task UpdateMenu()
+        {
+            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.Default);
+            await _client.EditMessageTextAsync(
+                chatId: _userContext.UserId,
+                messageId: _update.CallbackQuery.Message.MessageId,
+                text: MainMenuMessage,
+                replyMarkup: new InlineKeyboardMarkup(
+                    new[] {
+                        new InlineKeyboardButton() { Text = "Host turnip exchange", CallbackData = "/HostTurnip" },
+                        new InlineKeyboardButton() { Text = "Visit turnip exchange", CallbackData = "/VisitTurnip" }
                     }
                 )
             );
@@ -79,7 +100,7 @@ Island Name - {1}";
             if (_command == "Yes" && userState == UserStateEnum.ConfirmRegistration)
             {
                 _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.Default);
-                await CreateUser();
+                await CreateOrUpdateUser();
                 await SendMenu();
             }
             else
@@ -88,7 +109,8 @@ Island Name - {1}";
 
                 await _client.SendTextMessageAsync(
                     chatId: _userContext.UserId,
-                    text: "Enter IGN:"
+                    text: "Enter IGN:",
+                    replyMarkup: new ForceReplyMarkup()
                 );
             }
         }
@@ -100,7 +122,8 @@ Island Name - {1}";
 
             await _client.SendTextMessageAsync(
                 chatId: _userContext.UserId,
-                text: "Enter island name:"
+                text: "Enter island name:",
+                replyMarkup: new ForceReplyMarkup()
             );
         }
 
@@ -117,23 +140,35 @@ Island Name - {1}";
                     new KeyboardButton[][]
                     {
                         new KeyboardButton[] { "Yes", "No" }
-                    }
+                    },
+                    true, true
                 )
             );
         }
 
-        private async Task CreateUser()
+        private async Task CreateOrUpdateUser()
         {
             var ign = _userContext.GetContext<string>(UserContextEnum.InGameName);
             var islandName = _userContext.GetContext<string>(UserContextEnum.IslandName);
 
-            _context.Add(new User()
+            var user = _context.Users.Find(_userContext.UserId);
+            if (user == null)
             {
-                Id = _userContext.UserId,
-                InGameName = ign,
-                IslandName = islandName,
-                LastActiveDate = DateTime.Now
-            });
+                _context.Add(new User()
+                {
+                    Id = _userContext.UserId,
+                    InGameName = ign,
+                    IslandName = islandName,
+                    LastActiveDate = DateTime.Now
+                });
+            }
+            else
+            {
+                user.InGameName = ign;
+                user.IslandName = islandName;
+                user.LastActiveDate = DateTime.Now;
+                _context.Update(user);
+            }
             await _context.SaveChangesAsync();
         }
     }

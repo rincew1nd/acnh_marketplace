@@ -9,13 +9,11 @@ namespace ACNH_Marketplace.Web.Controllers
     [Route("api/telegram")]
     public class TelegramController : ControllerBase
     {
-        private IBotUpdateService _botUpdate;
-        private MarketplaceContext _context;
+        private readonly IBotUpdateService _botUpdate;
 
-        public TelegramController(IBotUpdateService botUpdate, MarketplaceContext context)
+        public TelegramController(IBotUpdateService botUpdate)
         {
             _botUpdate = botUpdate;
-            _context = context;
         }
 
         [HttpPost, Route("update")]

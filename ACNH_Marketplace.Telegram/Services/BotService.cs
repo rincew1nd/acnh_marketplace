@@ -10,8 +10,8 @@ namespace ACNH_Marketplace.Telegram.Services
 {
     public class BotService : IBotService, IDisposable
     {
-        private ILogger _logger;
-        private BotConfiguration _config;
+        private readonly ILogger _logger;
+        private readonly BotConfiguration _config;
 
         public TelegramBotClient Client { get; private set; }
 

@@ -1,5 +1,4 @@
 ﻿using ACNH_Marketplace.DataBase;
-using ACNH_Marketplace.Telegram.Enums;
 using ACNH_Marketplace.Telegram.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
@@ -10,18 +9,18 @@ namespace ACNH_Marketplace.Telegram.Services
 {
     public class BotUpdateService : IBotUpdateService
     {
-        private readonly IBotService _botService;
         private readonly ILogger<BotUpdateService> _logger;
-        private UserContextProvider _ucProvider;
-        private MarketplaceContext _context;
 
-        public BotUpdateService(
-            IBotService botService, UserContextProvider ucProvider,
-            MarketplaceContext context, ILogger<BotUpdateService> logger)
+        private readonly UserContextProvider _ucProvider;
+        private readonly MarketplaceContext _context;
+        private readonly CommandRouterService _commandRouter;
+
+        public BotUpdateService(UserContextProvider ucProvider, MarketplaceContext context,
+            CommandRouterService crs, ILogger<BotUpdateService> logger)
         {
-            _botService = botService;
             _ucProvider = ucProvider;
             _context = context;
+            _commandRouter = crs;
             _logger = logger;
         }
 
@@ -32,12 +31,7 @@ namespace ACNH_Marketplace.Telegram.Services
                 var (userId, command) = UpdateHelpers.GetUserAndCommand(update);
                 var user = await _context.Users.FindAsync(userId);
                 var userContext = _ucProvider.GetUserContext(user, userId);
-                var userState = userContext.GetContext<UserStateEnum>(UserContextEnum.UserState);
-
-                var type = CommandHelpers.GetCommandType(userState, command)[0];
-                var commandObj = CommandHelpers.CreateCommand(type, _botService, _context, userContext, command);
-
-                await commandObj.Execute(update);
+                await _commandRouter.FindCommand(_context, userContext, command).Execute(update);
             }
             catch (Exception ex)
             {

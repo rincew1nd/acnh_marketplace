@@ -18,6 +18,10 @@ namespace ACNH_Marketplace.Web
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((host, config) =>
+                {
+                    config.AddJsonFile("commandRouter.json", optional: true, reloadOnChange: true);
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>()
@@ -26,7 +30,6 @@ namespace ACNH_Marketplace.Web
 #elif (RELEASE)
                               .UseUrls("https://*:5001", "http://*:5000");
 #endif
-
                 });
     }
 }

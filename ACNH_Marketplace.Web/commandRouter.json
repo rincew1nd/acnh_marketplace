@@ -1,0 +1,27 @@
+﻿{
+  "CommandRoutes": {
+    "Default": {
+      "^[^/].*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand",
+      "^/HostTurnip": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
+    },
+    "Welcome": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand"
+    },
+    "EnteringIGName": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand"
+    },
+    "EnteringIslandName": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand"
+    },
+    "ConfirmRegistration": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand"
+    },
+    "HostTurnipExchange": {
+      "^/BTWelcome.*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand",
+      "^(?!/BTWelcome).*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand",
+      "^/HostTurnip": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand",
+      "^/EditHTE.*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand",
+      "^/NewHTE.*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
+    }
+  }
+}

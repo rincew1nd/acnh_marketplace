@@ -9,7 +9,7 @@ namespace ACNH_Marketplace.DataBase
     public class MarketplaceContext : DbContext
     {
         public DbSet<User> Users { get; set; }
-        public DbSet<UserReview> UserRevies { get; set; }
+        public DbSet<UserReview> UserReviews { get; set; }
         public DbSet<TurnipMarketHoster> TurnipMarketHosters { get; set; }
         public DbSet<TurnipMarketVisitor> TurnipMarketVisitors { get; set; }
         public DbSet<TurnipEntryFee> TurnipEntryFees { get; set; }
