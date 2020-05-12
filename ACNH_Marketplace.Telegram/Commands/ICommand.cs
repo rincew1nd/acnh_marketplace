@@ -5,6 +5,6 @@ namespace ACNH_Marketplace.Telegram.Commands.CommandBase
 {
     public interface ICommand
     {
-        Task Execute(Update update);
+        Task Execute(PersonifiedUpdate update);
     }
 }

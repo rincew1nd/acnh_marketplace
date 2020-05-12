@@ -3,9 +3,10 @@ using Telegram.Bot.Types;
 
 namespace ACNH_Marketplace.Telegram
 {
-    public class PersonifiedUpdate : Update
+    public class PersonifiedUpdate
     {
         public UserContext Context;
         public string Command;
+        public Update Update;
     }
 }

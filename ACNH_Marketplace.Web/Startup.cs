@@ -1,5 +1,6 @@
 using ACNH_Marketplace.DataBase;
 using ACNH_Marketplace.Telegram;
+using ACNH_Marketplace.Telegram.Commands;
 using ACNH_Marketplace.Telegram.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,10 +31,13 @@ namespace ACNH_Marketplace.Web
             Configuration.GetSection("TelegramBot").Bind(botConfiguration);
             services.AddSingleton(botConfiguration);
 
-            services.AddSingleton<UserContextService>();
-            services.AddSingleton<CommandRouterService>();
+            services.AddSingleton<IUserContextService, UserContextService>();
+            services.AddSingleton<ICommandRouterService, CommandRouterService>();
             services.AddSingleton<IBotService, BotService>();
             services.AddScoped<IBotUpdateService, BotUpdateService>();
+
+            services.AddScoped<WelcomeCommand>();
+            services.AddScoped<HostTurnipExchangeCommand>();
 
             services.AddHostedService<ActivatorService>(); //Activate IBotService
         }

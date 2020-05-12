@@ -22,16 +22,19 @@ Island Name - {1}
 Timezone(UTC) - {2}";
         private const string MainMenuMessage = @"Host or visit turnip exchange?";
 
-        public WelcomeCommand(IBotService botService, MarketplaceContext context, UserContext userContext, string command) :
-            base(botService, context, userContext, command)
+        private PersonifiedUpdate _update;
+        private UserStateEnum _userState;
+
+        public WelcomeCommand(IBotService botService, MarketplaceContext context) : base(botService, context)
         {
         }
 
-        public override async Task Execute(Update update)
+        public override async Task Execute(PersonifiedUpdate update)
         {
             _update = update;
+            _userState = update.Context.GetContext<UserStateEnum>(UserContextEnum.UserState);
 
-            switch (update.Type)
+            switch (update.Update.Type)
             {
                 case UpdateType.Message:
                     switch (_userState)
@@ -62,9 +65,9 @@ Timezone(UTC) - {2}";
 
         private async Task SendMenu()
         {
-            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.Default);
+            _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.Default);
             await _client.SendTextMessageAsync(
-                chatId: _userContext.UserId,
+                chatId: _update.Context.UserId,
                 text: MainMenuMessage,
                 replyMarkup: new InlineKeyboardMarkup(
                     new[] {
@@ -77,10 +80,10 @@ Timezone(UTC) - {2}";
 
         private async Task UpdateMenu()
         {
-            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.Default);
+            _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.Default);
             await _client.EditMessageTextAsync(
-                chatId: _userContext.UserId,
-                messageId: _update.CallbackQuery.Message.MessageId,
+                chatId: _update.Context.UserId,
+                messageId: _update.Update.CallbackQuery.Message.MessageId,
                 text: MainMenuMessage,
                 replyMarkup: new InlineKeyboardMarkup(
                     new[] {
@@ -96,23 +99,23 @@ Timezone(UTC) - {2}";
             if (userState == UserStateEnum.Welcome)
             {
                 await _client.SendTextMessageAsync(
-                    chatId: _userContext.UserId,
+                    chatId: _update.Context.UserId,
                     text: string.Format(WelcomeMessage)
                 );
             }
 
-            if (_command == "Yes" && userState == UserStateEnum.ConfirmRegistration)
+            if (_update.Command == "Yes" && userState == UserStateEnum.ConfirmRegistration)
             {
-                _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.Default);
+                _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.Default);
                 await CreateOrUpdateUser();
                 await SendMenu();
             }
             else
             {
-                _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringIGName);
+                _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringIGName);
 
                 await _client.SendTextMessageAsync(
-                    chatId: _userContext.UserId,
+                    chatId: _update.Context.UserId,
                     text: "Enter IGN:",
                     replyMarkup: new ForceReplyMarkup()
                 );
@@ -121,11 +124,11 @@ Timezone(UTC) - {2}";
 
         private async Task SetIGN()
         {
-            _userContext.SetContext(UserContextEnum.InGameName, _command);
-            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringIslandName);
+            _update.Context.SetContext(UserContextEnum.InGameName, _update.Command);
+            _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringIslandName);
 
             await _client.SendTextMessageAsync(
-                chatId: _userContext.UserId,
+                chatId: _update.Context.UserId,
                 text: "Enter island name:",
                 replyMarkup: new ForceReplyMarkup()
             );
@@ -135,12 +138,12 @@ Timezone(UTC) - {2}";
         {
             if (!again)
             {
-                _userContext.SetContext(UserContextEnum.IslandName, _command);
-                _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringUTC);
+                _update.Context.SetContext(UserContextEnum.IslandName, _update.Command);
+                _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringUTC);
             }
 
             await _client.SendTextMessageAsync(
-                chatId: _userContext.UserId,
+                chatId: _update.Context.UserId,
                 text: "Enter your timezone (-14 < UTC±0 < 14):",
                 replyMarkup: new ForceReplyMarkup()
             );
@@ -148,26 +151,26 @@ Timezone(UTC) - {2}";
 
         public async Task SetTimeZone()
         {
-            var result = int.TryParse(_command, out var timezone);
+            var result = int.TryParse(_update.Command, out var timezone);
             if (!result || timezone < -14 || timezone > 14)
             {
                 await _client.SendTextMessageAsync(
-                    chatId: _userContext.UserId,
-                    text: $"'{_command}' is not a number. Only numbers from -14 to 14 acceptable."
+                    chatId: _update.Context.UserId,
+                    text: $"'{_update.Command}' is not a number. Only numbers from -14 to 14 acceptable."
                 );
                 await SetIslandName(true);
             }
             else
             {
-                _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.ConfirmRegistration);
-                _userContext.SetContext(UserContextEnum.UTC, timezone);
+                _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.ConfirmRegistration);
+                _update.Context.SetContext(UserContextEnum.UTC, timezone);
 
-                var ign = _userContext.GetContext<string>(UserContextEnum.InGameName);
-                var islandName = _userContext.GetContext<string>(UserContextEnum.IslandName);
+                var ign = _update.Context.GetContext<string>(UserContextEnum.InGameName);
+                var islandName = _update.Context.GetContext<string>(UserContextEnum.IslandName);
 
                 await _client.SendTextMessageAsync(
-                    chatId: _userContext.UserId,
-                    text: string.Format(RegistrationConfirmation, ign, islandName, _command),
+                    chatId: _update.Context.UserId,
+                    text: string.Format(RegistrationConfirmation, ign, islandName, _update.Command),
                     replyMarkup: new ReplyKeyboardMarkup(
                         new KeyboardButton[][]
                         {
@@ -181,22 +184,22 @@ Timezone(UTC) - {2}";
 
         private async Task CreateOrUpdateUser()
         {
-            var ign = _userContext.GetContext<string>(UserContextEnum.InGameName);
-            var islandName = _userContext.GetContext<string>(UserContextEnum.IslandName);
-            var timezone = _userContext.GetContext<int>(UserContextEnum.UTC);
+            var ign = _update.Context.GetContext<string>(UserContextEnum.InGameName);
+            var islandName = _update.Context.GetContext<string>(UserContextEnum.IslandName);
+            var timezone = _update.Context.GetContext<int>(UserContextEnum.UTC);
 
-            var username = $"{_update.Message.From.FirstName} {_update.Message.From.LastName}";
-            if (!string.IsNullOrWhiteSpace(_update.Message.From.Username))
+            var username = $"{_update.Update.Message.From.FirstName} {_update.Update.Message.From.LastName}";
+            if (!string.IsNullOrWhiteSpace(_update.Update.Message.From.Username))
             {
-                username = $"{_update.Message.From.Username} ({username})";
+                username = $"{_update.Update.Message.From.Username} ({username})";
             }
 
-            var user = _context.Users.Find(_userContext.UserId);
+            var user = _context.Users.Find(_update.Context.UserId);
             if (user == null)
             {
                 _context.Add(new User()
                 {
-                    Id = _userContext.UserId,
+                    Id = _update.Context.UserId,
                     InGameName = ign,
                     IslandName = islandName,
                     UserName = username,

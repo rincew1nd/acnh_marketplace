@@ -1,5 +1,7 @@
 ﻿using ACNH_Marketplace.DataBase;
+using ACNH_Marketplace.Telegram.Commands.CommandBase;
 using ACNH_Marketplace.Telegram.Helpers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -9,12 +11,14 @@ namespace ACNH_Marketplace.Telegram.Services
 {
     public class BotUpdateService : IBotUpdateService
     {
+        private readonly ICommandRouterService _commandRouter;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<BotUpdateService> _logger;
-        private readonly CommandRouterService _commandRouter;
 
-        public BotUpdateService(CommandRouterService crs, ILogger<BotUpdateService> logger)
+        public BotUpdateService(ICommandRouterService crs, IServiceScopeFactory scopeFactory, ILogger<BotUpdateService> logger)
         {
             _commandRouter = crs;
+            _scopeFactory = scopeFactory;
             _logger = logger;
         }
 
@@ -22,8 +26,12 @@ namespace ACNH_Marketplace.Telegram.Services
         {
             try
             {
-                var command = _commandRouter.FindCommand(update);
-                await command.Execute(update);
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var type = _commandRouter.FindCommand(update);
+                    var command = (ICommand)scope.ServiceProvider.GetService(type);
+                    await command.Execute(update);
+                }
             }
             catch (Exception ex)
             {

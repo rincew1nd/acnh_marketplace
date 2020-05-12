@@ -4,7 +4,6 @@ using ACNH_Marketplace.Telegram.Commands.CommandBase;
 using ACNH_Marketplace.Telegram.Enums;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -19,13 +18,10 @@ namespace ACNH_Marketplace.Telegram.Services
         private readonly ILogger _logger;
 
         private readonly IBotService _botService;
-        private readonly IServiceScopeFactory _scopeFactory;
 
-        public CommandRouterService(IBotService botService, IConfiguration config,
-            IServiceScopeFactory scopeFactory, ILogger<CommandRouterService> logger)
+        public CommandRouterService(IBotService botService, IConfiguration config, ILogger<CommandRouterService> logger)
         {
             _botService = botService;
-            _scopeFactory = scopeFactory;
 
             _logger = logger;
 
@@ -33,7 +29,7 @@ namespace ACNH_Marketplace.Telegram.Services
             config.GetSection("CommandRoutes").Bind(_routes);
         }
 
-        public ICommand FindCommand(PersonifiedUpdate update)
+        public Type FindCommand(PersonifiedUpdate update)
         {
             var types = new List<System.Type>();
 
@@ -53,12 +49,7 @@ namespace ACNH_Marketplace.Telegram.Services
             if (types.Count > 1)
                 _logger.LogWarning($"Found more than one routes for command - {update.Command}");
 
-            using (var scope = _scopeFactory.CreateScope())
-            {
-                return !types.Any()
-                    ? (ICommand) scope.ServiceProvider.GetService(typeof(WelcomeCommand))
-                    : (ICommand) scope.ServiceProvider.GetService(types.First());
-            }
+            return !types.Any() ? typeof(WelcomeCommand) : types.First();
         }
     }
 }

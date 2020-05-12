@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -21,32 +20,37 @@ namespace ACNH_Marketplace.Telegram.Commands
         private static string HostDescription = "From: {0}\nTurnip Cost: {1}\nEnd date: {2}\nEntry fee:\n{3}\n\n{4}";
         private static string RegistrationHostDescription = "From: {0}\nTurnip Cost: {1}\nEnd date: {2}\n\n{3}";
 
-        public HostTurnipExchangeCommand(IBotService botService, MarketplaceContext context, UserContext userContext, string command) :
-            base(botService, context, userContext, command)
+        private PersonifiedUpdate _update;
+        private UserStateEnum _userState;
+
+
+        public HostTurnipExchangeCommand(IBotService botService, MarketplaceContext context) : base(botService, context)
         {
         }
 
-        public override async Task Execute(Update update)
+        public override async Task Execute(PersonifiedUpdate update)
         {
             _update = update;
-            switch (update.Type)
+            _userState = update.Context.GetContext<UserStateEnum>(UserContextEnum.UserState);
+
+            switch (update.Update.Type)
             {
                 case UpdateType.CallbackQuery:
-                    if (_command.StartsWith("/HostTurnip"))
+                    if (update.Command.StartsWith("/HostTurnip"))
                         await InitHTE();
-                    else if (_command.StartsWith("/NewHTE"))
+                    else if (update.Command.StartsWith("/NewHTE"))
                         await NewHTEDate();
-                    else if (_command == "/EditHTETurnipCost")
+                    else if (update.Command == "/EditHTETurnipCost")
                         await EditHTETurnipCost();
-                    else if (_command == "/EditHTEDate")
+                    else if (update.Command == "/EditHTEDate")
                         await EditHTEDate();
-                    else if (_command == "/EditHTEDescription")
+                    else if (update.Command == "/EditHTEDescription")
                         await EditHTEDescription();
-                    //else if (_command == "/EditHTEFee")
+                    //else if (update.Command == "/EditHTEFee")
                     //    await EditHTEFee();
-                    else if (_command == "/EditHTEDelete")
+                    else if (update.Command == "/EditHTEDelete")
                         await EditHTEDelete();
-                    else if (_command.StartsWith("/EditHTE"))
+                    else if (update.Command.StartsWith("/EditHTE"))
                         await EditHTE();
                     break;
                 case UpdateType.Message:
@@ -79,10 +83,10 @@ namespace ACNH_Marketplace.Telegram.Commands
         private async Task InitHTE()
         {
             NullContext(true);
-            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.HostTurnipExchange);
+            _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.HostTurnipExchange);
             await _client.EditMessageTextAsync(
-                chatId: _userContext.UserId,
-                messageId: _update.CallbackQuery.Message.MessageId,
+                chatId: _update.Context.UserId,
+                messageId: _update.Update.CallbackQuery.Message.MessageId,
                 text: "Host turnip exchange menu:",
                 replyMarkup: new InlineKeyboardMarkup(
                     new[] {
@@ -97,7 +101,7 @@ namespace ACNH_Marketplace.Telegram.Commands
         #region HostTurnipExchange Edit
         private async Task EditHTE()
         {
-            var guid = _userContext.GetContext<Guid?>(UserContextEnum.EditHTEId);
+            var guid = _update.Context.GetContext<Guid?>(UserContextEnum.EditHTEId);
             if (guid.HasValue && guid != Guid.Empty)
             {
                 await EditHTE(guid.Value);
@@ -105,9 +109,9 @@ namespace ACNH_Marketplace.Telegram.Commands
             }
             else
             {
-                if (_command.Split(' ').Length > 1 && Guid.TryParse(_command.Split(' ')[1], out var guidTemp))
+                if (_update.Command.Split(' ').Length > 1 && Guid.TryParse(_update.Command.Split(' ')[1], out var guidTemp))
                 {
-                    _userContext.SetContext(UserContextEnum.EditHTEId, (Guid?)guidTemp);
+                    _update.Context.SetContext(UserContextEnum.EditHTEId, (Guid?)guidTemp);
                     await EditHTE(guidTemp);
                     return;
                 }
@@ -115,9 +119,9 @@ namespace ACNH_Marketplace.Telegram.Commands
 
             NullContext(true);
 
-            var utc = _userContext.GetContext<int>(UserContextEnum.UTC);
+            var utc = _update.Context.GetContext<int>(UserContextEnum.UTC);
             var hostsInfo = _context.TurnipMarketHosters
-                .Where(tmh => tmh.UserId == _userContext.UserId && tmh.ExpirationDate > DateTime.Now)
+                .Where(tmh => tmh.UserId == _update.Context.UserId && tmh.ExpirationDate > DateTime.Now)
                 .OrderBy(tmh => tmh.ExpirationDate);
 
             var keyboardButtons = new List<List<InlineKeyboardButton>>();
@@ -145,8 +149,8 @@ namespace ACNH_Marketplace.Telegram.Commands
             });
 
             await _client.EditMessageReplyMarkupAsync(
-                chatId: _userContext.UserId,
-                messageId: _update.CallbackQuery.Message.MessageId,
+                chatId: _update.Context.UserId,
+                messageId: _update.Update.CallbackQuery.Message.MessageId,
                 replyMarkup: new InlineKeyboardMarkup(keyboardButtons)
             );
         }
@@ -161,7 +165,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             FillContext(hostInfo);
 
             await _client.SendTextMessageAsync(
-                chatId: _userContext.UserId,
+                chatId: _update.Context.UserId,
                 text:
                     string.Format(HostDescription,
                         $"{hostInfo.User.InGameName} {hostInfo.User.IslandName}",
@@ -176,7 +180,7 @@ namespace ACNH_Marketplace.Telegram.Commands
                         new[] { new InlineKeyboardButton() { Text = "Change date", CallbackData = "/EditHTEDate" } },
                         new[] { new InlineKeyboardButton() { Text = "Change description", CallbackData = "/EditHTEDescription" } },
                         new[] { new InlineKeyboardButton() { Text = "Change entry fee", CallbackData = "/EditHTEFee" } },
-                        new[] { new InlineKeyboardButton() { Text = "Delete exchange record", CallbackData = "/EditHTEFee" } },
+                        new[] { new InlineKeyboardButton() { Text = "Delete exchange record", CallbackData = "/EditHTEDelete" } },
                         new[] { new InlineKeyboardButton() { Text = "<= Back", CallbackData = "/HostTurnip" } }
                     })
             );
@@ -184,10 +188,10 @@ namespace ACNH_Marketplace.Telegram.Commands
 
         private async Task EditHTEDate()
         {
-            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.EditHTEDate);
+            _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.EditHTEDate);
 
             await _client.SendTextMessageAsync(
-                chatId: _userContext.UserId,
+                chatId: _update.Context.UserId,
                 text: "Enter date when exchange will end:\n(Format 'dd.MM.yyyy HH' example '14.02.2020 20)",
                 replyMarkup: new ForceReplyMarkup()
             );
@@ -195,10 +199,10 @@ namespace ACNH_Marketplace.Telegram.Commands
 
         private async Task EditHTETurnipCost()
         {
-            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.EditHTEPrice);
+            _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.EditHTEPrice);
 
             await _client.SendTextMessageAsync(
-                chatId: _userContext.UserId,
+                chatId: _update.Context.UserId,
                 text: "Enter turnip cost:",
                 replyMarkup: new ForceReplyMarkup()
             );
@@ -206,10 +210,10 @@ namespace ACNH_Marketplace.Telegram.Commands
 
         private async Task EditHTEDescription()
         {
-            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.EditHTEDescription);
+            _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.EditHTEDescription);
 
             await _client.SendTextMessageAsync(
-                chatId: _userContext.UserId,
+                chatId: _update.Context.UserId,
                 text: "Enter description:",
                 replyMarkup: new ForceReplyMarkup()
             );
@@ -220,33 +224,33 @@ namespace ACNH_Marketplace.Telegram.Commands
             switch (_userState)
             {
                 case UserStateEnum.EditHTEDate:
-                    if (!DateTime.TryParseExact(_command, "dd.MM.yyyy HH", null, DateTimeStyles.None, out var date))
+                    if (!DateTime.TryParseExact(_update.Command, "dd.MM.yyyy HH", null, DateTimeStyles.None, out var date))
                     {
                         await _client.SendTextMessageAsync(
-                            chatId: _userContext.UserId,
-                            text: $"Invalid date format {_command}."
+                            chatId: _update.Context.UserId,
+                            text: $"Invalid date format {_update.Command}."
                         );
                         await EditHTEDate();
                         return;
                     }
-                    _userContext.SetContext(UserContextEnum.HTEDate, date);
+                    _update.Context.SetContext(UserContextEnum.HTEDate, date);
                     await SaveOrUpdateHTE();
                     break;
                 case UserStateEnum.EditHTEDescription:
-                    _userContext.SetContext(UserContextEnum.HTEDescription, _command);
+                    _update.Context.SetContext(UserContextEnum.HTEDescription, _update.Command);
                     await SaveOrUpdateHTE();
                     break;
                 case UserStateEnum.EditHTEPrice:
-                    if (!int.TryParse(_command, out var price))
+                    if (!int.TryParse(_update.Command, out var price))
                     {
                         await _client.SendTextMessageAsync(
-                            chatId: _userContext.UserId,
-                            text: $"Invalid price format {_command}."
+                            chatId: _update.Context.UserId,
+                            text: $"Invalid price format {_update.Command}."
                         );
                         await EditHTEDate();
                         return;
                     }
-                    _userContext.SetContext(UserContextEnum.HTEPrice, price);
+                    _update.Context.SetContext(UserContextEnum.HTEPrice, price);
                     await SaveOrUpdateHTE();
                     break;
             }
@@ -255,7 +259,7 @@ namespace ACNH_Marketplace.Telegram.Commands
         private async Task EditHTEDelete()
         {
             await DeleteHTE();
-            _userContext.SetContext(UserContextEnum.EditHTEId, (Guid?)null);
+            _update.Context.SetContext(UserContextEnum.EditHTEId, (Guid?)null);
             await EditHTE();
         }
         #endregion
@@ -263,7 +267,7 @@ namespace ACNH_Marketplace.Telegram.Commands
         #region HostTurnipExchange Registration
         private async Task NewHTEDate()
         {
-            if (_command == "Yes")
+            if (_update.Command == "Yes")
             {
                 await SaveOrUpdateHTE();
                 NullContext();
@@ -271,10 +275,10 @@ namespace ACNH_Marketplace.Telegram.Commands
             }
             else
             {
-                _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringHTEDate);
+                _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringHTEDate);
 
                 await _client.SendTextMessageAsync(
-                    chatId: _userContext.UserId,
+                    chatId: _update.Context.UserId,
                     text: "Enter date when exchange will end:\n(Format 'dd.MM.yyyy HH' example '14.02.2020 20)",
                     replyMarkup: new ForceReplyMarkup()
                 );
@@ -285,21 +289,21 @@ namespace ACNH_Marketplace.Telegram.Commands
         {
             if (!again)
             {
-                if (!DateTime.TryParseExact(_command, "dd.MM.yyyy HH", null, DateTimeStyles.None, out var date))
+                if (!DateTime.TryParseExact(_update.Command, "dd.MM.yyyy HH", null, DateTimeStyles.None, out var date))
                 {
                     await _client.SendTextMessageAsync(
-                        chatId: _userContext.UserId,
-                        text: $"Invalid date format {_command}."
+                        chatId: _update.Context.UserId,
+                        text: $"Invalid date format {_update.Command}."
                     );
                     await NewHTEDate();
                     return;
                 }
 
-                _userContext.SetContext(UserContextEnum.HTEDate, date);
-                _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringHTEPrice);
+                _update.Context.SetContext(UserContextEnum.HTEDate, date);
+                _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringHTEPrice);
             }
             await _client.SendTextMessageAsync(
-                chatId: _userContext.UserId,
+                chatId: _update.Context.UserId,
                 text: "Enter turnip cost:",
                 replyMarkup: new ForceReplyMarkup()
             );
@@ -307,21 +311,21 @@ namespace ACNH_Marketplace.Telegram.Commands
 
         private async Task NewHTEDescription()
         {
-            if (!int.TryParse(_command, out var price))
+            if (!int.TryParse(_update.Command, out var price))
             {
                 await _client.SendTextMessageAsync(
-                    chatId: _userContext.UserId,
-                    text: $"Invalid price format {_command}."
+                    chatId: _update.Context.UserId,
+                    text: $"Invalid price format {_update.Command}."
                 );
                 await NewHTEPrice(true);
                 return;
             }
 
-            _userContext.SetContext(UserContextEnum.HTEPrice, price);
-            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringHTEDescription);
+            _update.Context.SetContext(UserContextEnum.HTEPrice, price);
+            _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.EnteringHTEDescription);
 
             await _client.SendTextMessageAsync(
-                chatId: _userContext.UserId,
+                chatId: _update.Context.UserId,
                 text: "Enter description:",
                 replyMarkup: new ForceReplyMarkup()
             );
@@ -329,16 +333,16 @@ namespace ACNH_Marketplace.Telegram.Commands
 
         private async Task NewHTEConfirm()
         {
-            _userContext.SetContext(UserContextEnum.HTEDescription, _command);
-            _userContext.SetContext(UserContextEnum.UserState, UserStateEnum.ConfirmHTERegistration);
+            _update.Context.SetContext(UserContextEnum.HTEDescription, _update.Command);
+            _update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.ConfirmHTERegistration);
 
-            var username = _userContext.GetContext<string>(UserContextEnum.UserName);
-            var date = _userContext.GetContext<DateTime>(UserContextEnum.HTEDate);
-            var price = _userContext.GetContext<int>(UserContextEnum.HTEPrice);
+            var username = _update.Context.GetContext<string>(UserContextEnum.UserName);
+            var date = _update.Context.GetContext<DateTime>(UserContextEnum.HTEDate);
+            var price = _update.Context.GetContext<int>(UserContextEnum.HTEPrice);
 
             await _client.SendTextMessageAsync(
-                chatId: _userContext.UserId,
-                text: string.Format(RegistrationHostDescription, username, date, price, _command),
+                chatId: _update.Context.UserId,
+                text: string.Format(RegistrationHostDescription, username, date, price, _update.Command),
                 replyMarkup: new ReplyKeyboardMarkup(
                     new KeyboardButton[][]
                     {
@@ -353,12 +357,12 @@ namespace ACNH_Marketplace.Telegram.Commands
         #region Database
         private async Task SaveOrUpdateHTE()
         {
-            var id = _userContext.GetContext<Guid?>(UserContextEnum.EditHTEId);
+            var id = _update.Context.GetContext<Guid?>(UserContextEnum.EditHTEId);
 
-            var utc = _userContext.GetContext<int>(UserContextEnum.UTC);
-            var date = _userContext.GetContext<DateTime>(UserContextEnum.HTEDate);
-            var price = _userContext.GetContext<int>(UserContextEnum.HTEPrice);
-            var description = _userContext.GetContext<string>(UserContextEnum.HTEDescription);
+            var utc = _update.Context.GetContext<int>(UserContextEnum.UTC);
+            var date = _update.Context.GetContext<DateTime>(UserContextEnum.HTEDate);
+            var price = _update.Context.GetContext<int>(UserContextEnum.HTEPrice);
+            var description = _update.Context.GetContext<string>(UserContextEnum.HTEDescription);
 
             var hte = await _context.TurnipMarketHosters.FindAsync(id.Value);
             if (hte == null)
@@ -369,10 +373,10 @@ namespace ACNH_Marketplace.Telegram.Commands
                     Message = description,
                     TurnipCost = price,
                     ExpirationDate = date.ToServerDate(utc),
-                    UserId = _userContext.UserId
+                    UserId = _update.Context.UserId
                 };
                 await _context.AddAsync(tmh);
-                _userContext.SetContext(UserContextEnum.EditHTEId, (Guid?)tmh.Id);
+                _update.Context.SetContext(UserContextEnum.EditHTEId, (Guid?)tmh.Id);
             }
             else
             {
@@ -388,7 +392,7 @@ namespace ACNH_Marketplace.Telegram.Commands
 
         private async Task DeleteHTE()
         {
-            var guid = _userContext.GetContext<Guid?>(UserContextEnum.EditHTEId);
+            var guid = _update.Context.GetContext<Guid?>(UserContextEnum.EditHTEId);
             var hte = await _context.TurnipMarketHosters.FindAsync(guid.Value);
             _context.TurnipMarketHosters.Remove(hte);
             await _context.SaveChangesAsync();
@@ -400,19 +404,19 @@ namespace ACNH_Marketplace.Telegram.Commands
         {
             if (tmh != null)
             {
-                _userContext.SetContext(UserContextEnum.HTEDate, tmh.ExpirationDate);
-                _userContext.SetContext(UserContextEnum.HTEDescription, tmh.Message);
-                _userContext.SetContext(UserContextEnum.HTEPrice, tmh.TurnipCost);
+                _update.Context.SetContext(UserContextEnum.HTEDate, tmh.ExpirationDate);
+                _update.Context.SetContext(UserContextEnum.HTEDescription, tmh.Message);
+                _update.Context.SetContext(UserContextEnum.HTEPrice, tmh.TurnipCost);
             }
         }
 
         public void NullContext(bool includingId = false)
         {
-            _userContext.SetContext(UserContextEnum.HTEDate, default(DateTime));
-            _userContext.SetContext(UserContextEnum.HTEDescription, "");
-            _userContext.SetContext(UserContextEnum.HTEPrice, default(int));
+            _update.Context.SetContext(UserContextEnum.HTEDate, default(DateTime));
+            _update.Context.SetContext(UserContextEnum.HTEDescription, "");
+            _update.Context.SetContext(UserContextEnum.HTEPrice, default(int));
             if (includingId)
-                _userContext.SetContext(UserContextEnum.EditHTEId, default(Guid));
+                _update.Context.SetContext(UserContextEnum.EditHTEId, default(Guid));
         }
         #endregion
     }

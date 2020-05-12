@@ -29,9 +29,12 @@ namespace ACNH_Marketplace.Web.Controllers
             var user = await _context.Users.FindAsync(userId);
             var userContext = _userContextService.GetUserContext(user, userId);
 
-            var personifiedUpdate = (PersonifiedUpdate) update;
-            personifiedUpdate.Context = userContext;
-            personifiedUpdate.Command = command;
+            PersonifiedUpdate personifiedUpdate = new PersonifiedUpdate()
+            {
+                Update = update,
+                Context = userContext,
+                Command = command
+            };
 
             await _botUpdate.ProceedUpdate(personifiedUpdate);
             return Ok();
