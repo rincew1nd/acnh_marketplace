@@ -1,13 +1,13 @@
 ﻿using ACNH_Marketplace.DataBase.Models;
 using System.Collections.Generic;
 
-namespace ACNH_Marketplace.Telegram
+namespace ACNH_Marketplace.Telegram.Services
 {
-    public class UserContextProvider
+    public class UserContextService : IUserContextService
     {
         private Dictionary<int, UserContext> _userContexts;
 
-        public UserContextProvider()
+        public UserContextService()
         {
             _userContexts = new Dictionary<int, UserContext>();
         }

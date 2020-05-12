@@ -30,7 +30,7 @@ namespace ACNH_Marketplace.Web
             Configuration.GetSection("TelegramBot").Bind(botConfiguration);
             services.AddSingleton(botConfiguration);
 
-            services.AddSingleton<UserContextProvider>();
+            services.AddSingleton<UserContextService>();
             services.AddSingleton<CommandRouterService>();
             services.AddSingleton<IBotService, BotService>();
             services.AddScoped<IBotUpdateService, BotUpdateService>();

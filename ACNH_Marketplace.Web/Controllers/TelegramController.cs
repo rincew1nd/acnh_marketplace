@@ -1,4 +1,6 @@
 ﻿using ACNH_Marketplace.DataBase;
+using ACNH_Marketplace.Telegram;
+using ACNH_Marketplace.Telegram.Helpers;
 using ACNH_Marketplace.Telegram.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -10,16 +12,28 @@ namespace ACNH_Marketplace.Web.Controllers
     public class TelegramController : ControllerBase
     {
         private readonly IBotUpdateService _botUpdate;
+        private readonly MarketplaceContext _context;
+        private readonly IUserContextService _userContextService;
 
-        public TelegramController(IBotUpdateService botUpdate)
+        public TelegramController(IBotUpdateService botUpdate, MarketplaceContext context, IUserContextService userContextService)
         {
             _botUpdate = botUpdate;
+            _context = context;
+            _userContextService = userContextService;
         }
 
         [HttpPost, Route("update")]
         public async Task<IActionResult> Post([FromBody] Update update)
         {
-            await _botUpdate.ProceedUpdate(update);
+            var (userId, command) = UpdateHelpers.GetUserAndCommand(update);
+            var user = await _context.Users.FindAsync(userId);
+            var userContext = _userContextService.GetUserContext(user, userId);
+
+            var personifiedUpdate = (PersonifiedUpdate) update;
+            personifiedUpdate.Context = userContext;
+            personifiedUpdate.Command = command;
+
+            await _botUpdate.ProceedUpdate(personifiedUpdate);
             return Ok();
         }
     }

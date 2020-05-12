@@ -1,4 +1,4 @@
-﻿namespace ACNH_Marketplace.Telegram.Services
+﻿namespace ACNH_Marketplace.Telegram
 {
     public class BotConfiguration
     {

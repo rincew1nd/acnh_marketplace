@@ -1,9 +1,8 @@
 ﻿using ACNH_Marketplace.DataBase.Models;
 using ACNH_Marketplace.Telegram.Enums;
-using System;
 using System.Collections.Generic;
 
-namespace ACNH_Marketplace.Telegram
+namespace ACNH_Marketplace.Telegram.Services
 {
     public class UserContext
     {

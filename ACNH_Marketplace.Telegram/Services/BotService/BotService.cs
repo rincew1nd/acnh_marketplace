@@ -1,9 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 using Telegram.Bot;
 
 namespace ACNH_Marketplace.Telegram.Services

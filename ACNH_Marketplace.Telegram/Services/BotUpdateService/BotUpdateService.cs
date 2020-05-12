@@ -10,28 +10,20 @@ namespace ACNH_Marketplace.Telegram.Services
     public class BotUpdateService : IBotUpdateService
     {
         private readonly ILogger<BotUpdateService> _logger;
-
-        private readonly UserContextProvider _ucProvider;
-        private readonly MarketplaceContext _context;
         private readonly CommandRouterService _commandRouter;
 
-        public BotUpdateService(UserContextProvider ucProvider, MarketplaceContext context,
-            CommandRouterService crs, ILogger<BotUpdateService> logger)
+        public BotUpdateService(CommandRouterService crs, ILogger<BotUpdateService> logger)
         {
-            _ucProvider = ucProvider;
-            _context = context;
             _commandRouter = crs;
             _logger = logger;
         }
 
-        public async Task ProceedUpdate(Update update)
+        public async Task ProceedUpdate(PersonifiedUpdate update)
         {
             try
             {
-                var (userId, command) = UpdateHelpers.GetUserAndCommand(update);
-                var user = await _context.Users.FindAsync(userId);
-                var userContext = _ucProvider.GetUserContext(user, userId);
-                await _commandRouter.FindCommand(_context, userContext, command).Execute(update);
+                var command = _commandRouter.FindCommand(update);
+                await command.Execute(update);
             }
             catch (Exception ex)
             {
