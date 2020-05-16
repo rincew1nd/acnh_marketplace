@@ -17,22 +17,22 @@ namespace ACNH_Marketplace.Telegram.Helpers
         /// </summary>
         /// <param name="update">Telegram <see cref="Update"/> object.</param>
         /// <returns>UserId and Command tuple.</returns>
-        public static (int userId, string command) GetUserAndCommand(Update update)
+        public static (int userId, string command, int? messageId) GetUserAndCommand(Update update)
         {
             switch (update.Type)
             {
                 case UpdateType.Message:
                 case UpdateType.EditedMessage:
-                    return (update.Message.From.Id, update.Message.Text);
+                    return (update.Message.From.Id, update.Message.Text, null);
                 case UpdateType.InlineQuery:
-                    return (update.InlineQuery.From.Id, update.InlineQuery.Query);
+                    return (update.InlineQuery.From.Id, update.InlineQuery.Query, int.Parse(update.InlineQuery.Id));
                 case UpdateType.ChosenInlineResult:
-                    return (update.ChosenInlineResult.From.Id, update.ChosenInlineResult.Query);
+                    return (update.ChosenInlineResult.From.Id, update.ChosenInlineResult.Query, int.Parse(update.ChosenInlineResult.InlineMessageId));
                 case UpdateType.CallbackQuery:
-                    return (update.CallbackQuery.From.Id, update.CallbackQuery.Data);
+                    return (update.CallbackQuery.From.Id, update.CallbackQuery.Data, int.Parse(update.CallbackQuery.Id));
             }
 
-            return (0, null);
+            return (0, null, null);
         }
     }
 }

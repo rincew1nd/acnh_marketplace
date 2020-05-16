@@ -1,48 +1,16 @@
 ﻿{
   "CommandRoutes": {
-    "Default": {
-      "^[^/].*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand",
-      "^/HostTurnip": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
+    "NotRegistered": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.UserProfileCommand"
     },
-    "Welcome": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand"
+    "MainPage": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.UserProfileCommand"
     },
-    "EnteringIGName": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand"
+    "ProfileMain": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.UserProfileCommand"
     },
-    "EnteringIslandName": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand"
-    },
-    "ConfirmRegistration": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand"
-    },
-    "HostTurnipExchange": {
-      "^/BTWelcome.*": "ACNH_Marketplace.Telegram.Commands.WelcomeCommand",
-      "^(?!/BTWelcome).*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand",
-      "^/HostTurnip": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand",
-      "^/EditHTE.*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand",
-      "^/NewHTE.*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
-    },
-    "EnteringHTEDate": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
-    },
-    "EnteringHTEPrice": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
-    },
-    "EnteringHTEDescription": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
-    },
-    "EditHTEDate": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
-    },
-    "EditHTEPrice": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
-    },
-    "EditHTEDescription": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
-    },
-    "ConfirmHTERegistration": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.HostTurnipExchangeCommand"
+    "ProfileEdit": {
+      ".*": "ACNH_Marketplace.Telegram.Commands.UserProfileCommand"
     }
   }
 }

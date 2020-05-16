@@ -6,6 +6,7 @@ namespace ACNH_Marketplace.Web
 {
     using ACNH_Marketplace.DataBase;
     using ACNH_Marketplace.Telegram;
+    using ACNH_Marketplace.Telegram.Commands;
     using ACNH_Marketplace.Telegram.Services;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -50,8 +51,10 @@ namespace ACNH_Marketplace.Web
 
             services.AddSingleton<IUserContextService, UserContextService>();
             services.AddSingleton<ICommandRouterService, CommandRouterService>();
-            services.AddSingleton<IBotService, BotService>();
+            services.AddSingleton<TelegramBot>();
             services.AddScoped<IBotUpdateService, BotUpdateService>();
+
+            services.AddScoped<UserProfileCommand>();
 
             // Hack for webhook activation of IBotService on startup
             services.AddHostedService<ActivatorService>();

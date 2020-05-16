@@ -27,5 +27,10 @@ namespace ACNH_Marketplace.Telegram
         /// Gets or sets <see cref="Update">bot update</see>.
         /// </summary>
         public Update Update { get; set; }
+
+        /// <summary>
+        /// Gets or sets message id.
+        /// </summary>
+        public int? MessageId { get; set; }
     }
 }

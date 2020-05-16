@@ -10,13 +10,28 @@ namespace ACNH_Marketplace.Telegram.Enums
     public enum UserStateEnum : int
     {
         /// <summary>
-        /// Unknown user state
+        /// Unknown user state.
         /// </summary>
         Unknown,
 
         /// <summary>
-        /// User on main page
+        /// User is not registered.
+        /// </summary>
+        NotRegistered,
+
+        /// <summary>
+        /// User on main page.
         /// </summary>
         MainPage,
+
+        /// <summary>
+        /// Main profile menu.
+        /// </summary>
+        ProfileMain,
+
+        /// <summary>
+        /// Edit profile menu.
+        /// </summary>
+        ProfileEdit,
     }
 }

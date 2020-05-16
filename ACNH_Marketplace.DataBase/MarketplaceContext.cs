@@ -27,6 +27,11 @@ namespace ACNH_Marketplace.DataBase
         public DbSet<User> Users { get; set; }
 
         /// <summary>
+        /// Gets or sets user contacts collection.
+        /// </summary>
+        public DbSet<UserContact> UserContacts { get; set; }
+
+        /// <summary>
         /// Gets or sets user reviews collection.
         /// </summary>
         public DbSet<UserReview> UserReviews { get; set; }

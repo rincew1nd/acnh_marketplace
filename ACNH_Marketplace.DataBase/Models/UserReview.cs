@@ -37,7 +37,7 @@ namespace ACNH_Marketplace.DataBase.Models
         /// <summary>
         /// Gets or sets reviewer <see cref="User"/> id.
         /// </summary>
-        public int ReviewerId { get; set; }
+        public Guid ReviewerId { get; set; }
 
         /// <summary>
         /// Gets or sets reviewer <see cref="User"/> object.
@@ -47,7 +47,7 @@ namespace ACNH_Marketplace.DataBase.Models
         /// <summary>
         /// Gets or sets reviewed <see cref="User"/> id.
         /// </summary>
-        public int ReviewedId { get; set; }
+        public Guid ReviewedId { get; set; }
 
         /// <summary>
         /// Gets or sets reviewed <see cref="User"/> object.

@@ -10,16 +10,16 @@ namespace ACNH_Marketplace.Telegram.Commands.CommandBase
     using global::Telegram.Bot;
 
     /// <summary>
-    /// Base <see cref="ICommand"/> implementation with <see cref="IBotService"/> and <see cref="MarketplaceContext"/>.
+    /// Base <see cref="ICommand"/> implementation with <see cref="TelegramBot"/> and <see cref="MarketplaceContext"/>.
     /// </summary>
     public abstract class BaseCommand : ICommand
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseCommand"/> class.
         /// </summary>
-        /// <param name="botService"><see cref="IBotService"/>.</param>
+        /// <param name="botService"><see cref="TelegramBot"/>.</param>
         /// <param name="context"><see cref="MarketplaceContext">Database context</see>.</param>
-        public BaseCommand(IBotService botService, MarketplaceContext context)
+        public BaseCommand(TelegramBot botService, MarketplaceContext context)
         {
             this.Client = botService;
             this.Context = context;
@@ -28,7 +28,7 @@ namespace ACNH_Marketplace.Telegram.Commands.CommandBase
         /// <summary>
         /// Gets a bot service to use it to interact with user.
         /// </summary>
-        protected IBotService Client { get; }
+        protected TelegramBot Client { get; }
 
         /// <summary>
         /// Gets a database cotext.

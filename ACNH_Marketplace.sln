@@ -7,7 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ACNH_Marketplace.Telegram",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ACNH_Marketplace.DataBase", "ACNH_Marketplace.DataBase\ACNH_Marketplace.DataBase.csproj", "{14B1322D-3961-40DB-AD21-70AA25748CBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACNH_Marketplace.Web", "ACNH_Marketplace.Web\ACNH_Marketplace.Web.csproj", "{525BF58C-D049-443B-9AE2-3F257B80BC20}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ACNH_Marketplace.Web", "ACNH_Marketplace.Web\ACNH_Marketplace.Web.csproj", "{525BF58C-D049-443B-9AE2-3F257B80BC20}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1A4547A0-BC8E-4930-BDFC-A19317C0FC2F}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

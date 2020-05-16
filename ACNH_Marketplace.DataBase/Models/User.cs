@@ -58,5 +58,10 @@ namespace ACNH_Marketplace.DataBase.Models
         /// Gets or sets collection of <see cref="TurnipMarketVisitor">turnip market visit applications</see> by user.
         /// </summary>
         public IList<TurnipMarketVisitor> Visits { get; set; }
+
+        /// <summary>
+        /// Gets or sets user contacts.
+        /// </summary>
+        public IList<UserContact> UserContacts { get; set; }
     }
 }

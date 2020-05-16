@@ -11,6 +11,7 @@ namespace ACNH_Marketplace.Web.Controllers
     using ACNH_Marketplace.Telegram.Services;
     using global::Telegram.Bot.Types;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;
 
     /// <summary>
     /// Controller for handling Telegram webhook update.
@@ -44,8 +45,8 @@ namespace ACNH_Marketplace.Web.Controllers
         [Route("update")]
         public async Task<IActionResult> Post([FromBody] Update update)
         {
-            var (userId, command) = UpdateHelpers.GetUserAndCommand(update);
-            var user = await this.context.Users.FindAsync(userId);
+            var (userId, command, messageId) = UpdateHelpers.GetUserAndCommand(update);
+            var user = await this.context.Users.FirstOrDefaultAsync(u => u.TelegramId == userId);
             var userContext = this.userContextService.GetUserContext(user, userId);
 
             PersonifiedUpdate personifiedUpdate = new PersonifiedUpdate()
@@ -53,6 +54,7 @@ namespace ACNH_Marketplace.Web.Controllers
                 Update = update,
                 Context = userContext,
                 Command = command,
+                MessageId = messageId,
             };
 
             await this.botUpdate.ProceedUpdate(personifiedUpdate);

@@ -42,7 +42,7 @@ namespace ACNH_Marketplace.DataBase.Models
         /// <summary>
         /// Gets or sets hosters <see cref="User"/> id.
         /// </summary>
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
 
         /// <summary>
         /// Gets or sets hosters <see cref="User"/> object.
