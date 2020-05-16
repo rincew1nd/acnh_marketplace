@@ -1,25 +1,35 @@
-﻿using ACNH_Marketplace.DataBase.Models;
-using System.Collections.Generic;
+﻿// <copyright file="UserContextService.cs" company="Cattleya">
+// Copyright (c) Cattleya. All rights reserved.
+// </copyright>
 
 namespace ACNH_Marketplace.Telegram.Services
 {
+    using System.Collections.Generic;
+    using ACNH_Marketplace.DataBase.Models;
+
+    /// <inheritdoc/>
     public class UserContextService : IUserContextService
     {
-        private Dictionary<int, UserContext> _userContexts;
+        private readonly Dictionary<int, UserContext> userContexts;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserContextService"/> class.
+        /// </summary>
         public UserContextService()
         {
-            _userContexts = new Dictionary<int, UserContext>();
+            this.userContexts = new Dictionary<int, UserContext>();
         }
 
+        /// <inheritdoc/>
         public UserContext GetUserContext(User user, int userId)
         {
-            if (_userContexts.ContainsKey(userId))
+            if (this.userContexts.ContainsKey(userId))
             {
-                return _userContexts[userId];
+                return this.userContexts[userId];
             }
-            _userContexts.Add(userId, new UserContext(user, userId));
-            return _userContexts[userId];
+
+            this.userContexts.Add(userId, new UserContext(user, userId));
+            return this.userContexts[userId];
         }
     }
 }

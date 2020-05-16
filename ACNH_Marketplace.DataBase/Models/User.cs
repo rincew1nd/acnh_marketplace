@@ -1,59 +1,62 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿// <copyright file="User.cs" company="Cattleya">
+// Copyright (c) Cattleya. All rights reserved.
+// </copyright>
 
 namespace ACNH_Marketplace.DataBase.Models
 {
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
+
+    /// <summary>
+    /// User record.
+    /// </summary>
     public class User
     {
         /// <summary>
-        /// Telegram user id
+        /// Gets or sets users primary key.
         /// </summary>
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         /// <summary>
-        /// In game name
+        /// Gets or sets users telegram id.
+        /// </summary>
+        public int TelegramId { get; set; }
+
+        /// <summary>
+        /// Gets or sets users in game name (IGN).
         /// </summary>
         public string InGameName { get; set; }
 
         /// <summary>
-        /// Game island name
+        /// Gets or sets users island name.
         /// </summary>
         public string IslandName { get; set; }
 
         /// <summary>
-        /// User name
-        /// </summary>
-        public string UserName { get; set; }
-        
-        /// <summary>
-        /// User GTM
+        /// Gets or sets users UTC timezone.
         /// </summary>
         public int Timezone { get; set; }
 
         /// <summary>
-        /// When user was active last time
+        /// Gets or sets users last active time.
         /// </summary>
         public DateTime LastActiveDate { get; set; }
 
         /// <summary>
-        /// User rating as a island hoster
+        /// Gets or sets users reviews.
         /// </summary>
-        public float HosterRating { get; set; }
-
-        /// <summary>
-        /// User rating as an island visitor
-        /// </summary>
-        public float VisitorRating { get; set; }
-
-        /// <summary>
-        /// User rating as exchange partisipant
-        /// </summary>
-        public float ExchangeRating { get; set; }
-
         public IList<UserReview> UserReviews { get; set; }
+
+        /// <summary>
+        /// Gets or sets collection of <see cref="TurnipMarketHoster">hosted turnip markets</see> by user.
+        /// </summary>
         public IList<TurnipMarketHoster> Hosts { get; set; }
+
+        /// <summary>
+        /// Gets or sets collection of <see cref="TurnipMarketVisitor">turnip market visit applications</see> by user.
+        /// </summary>
         public IList<TurnipMarketVisitor> Visits { get; set; }
     }
 }

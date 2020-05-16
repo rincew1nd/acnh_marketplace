@@ -1,25 +1,34 @@
-﻿using ACNH_Marketplace.DataBase;
-using ACNH_Marketplace.DataBase.Models;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+﻿// <copyright file="TestController.cs" company="Cattleya">
+// Copyright (c) Cattleya. All rights reserved.
+// </copyright>
 
 namespace ACNH_Marketplace.Web.Controllers
 {
+    using Microsoft.AspNetCore.Mvc;
+
+    /// <summary>
+    /// Test controller.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class TestController : ControllerBase
     {
-        private readonly MarketplaceContext _context;
-
-        public TestController(MarketplaceContext context)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestController"/> class.
+        /// </summary>
+        public TestController()
         {
-            _context = context;
         }
 
-        [HttpGet, Route("getUser")]
-        public async Task<ActionResult<User>> GetUser([FromQuery] int id)
+        /// <summary>
+        /// Check is api working.
+        /// </summary>
+        /// <returns>Stub.</returns>
+        [HttpGet]
+        [Route("getUser")]
+        public bool IsWorking()
         {
-            return await _context.Users.FindAsync(id);
+            return true;
         }
     }
 }

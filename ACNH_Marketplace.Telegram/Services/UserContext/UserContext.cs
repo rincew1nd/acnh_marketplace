@@ -1,52 +1,115 @@
-﻿using ACNH_Marketplace.DataBase.Models;
-using ACNH_Marketplace.Telegram.Enums;
-using System.Collections.Generic;
+﻿// <copyright file="UserContext.cs" company="Cattleya">
+// Copyright (c) Cattleya. All rights reserved.
+// </copyright>
 
 namespace ACNH_Marketplace.Telegram.Services
 {
+    using System.Collections.Generic;
+    using ACNH_Marketplace.DataBase.Models;
+    using ACNH_Marketplace.Telegram.Enums;
+
+    /// <summary>
+    /// User context object.
+    /// </summary>
     public class UserContext
     {
-        public int UserId;
-        public Dictionary<UserContextEnum, object> _userContext;
+        // TODO: Add input dictionary.
 
+        /// <summary>
+        /// Dictionary with user attributes keyed by string.
+        /// </summary>
+        private readonly Dictionary<string, object> userContextString;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserContext"/> class.
+        /// </summary>
+        /// <param name="user"><see cref="User">User database record</see>.</param>
+        /// <param name="userId">Telegram user id.</param>
         public UserContext(User user, int userId)
         {
-            UserId = userId;
+            this.UserId = userId;
             if (user != null)
             {
-                _userContext = new Dictionary<UserContextEnum, object>()
+                this.userContextString = new Dictionary<string, object>()
                 {
-                    { UserContextEnum.UserState, UserStateEnum.Default },
-                    { UserContextEnum.InGameName, user.InGameName },
-                    { UserContextEnum.IslandName, user.IslandName },
-                    { UserContextEnum.UTC, user.Timezone },
-                    { UserContextEnum.UserName, user.UserName }
+                    { UserContextEnum.UserState.ToString(), UserStateEnum.Unknown },
+                    { UserContextEnum.InGameName.ToString(), user.InGameName },
+                    { UserContextEnum.IslandName.ToString(), user.IslandName },
+                    { UserContextEnum.Timezone.ToString(), user.Timezone },
                 };
             }
             else
             {
-                _userContext = new Dictionary<UserContextEnum, object>()
+                this.userContextString = new Dictionary<string, object>()
                 {
-                    { UserContextEnum.UserState, UserStateEnum.Welcome }
+                    { UserContextEnum.UserState.ToString(), UserStateEnum.MainPage },
                 };
+            }
+
+            this.userContextString = new Dictionary<string, object>();
+        }
+
+        /// <summary>
+        /// Gets or sets user id.
+        /// </summary>
+        public int UserId { get; set; }
+
+        /// <summary>
+        /// Get user context by <see cref="UserContextEnum">attribute</see>.
+        /// </summary>
+        /// <typeparam name="T">Type of stored value.</typeparam>
+        /// <param name="ucEnum"><see cref="UserContextEnum">Attribute</see>.</param>
+        /// <returns>Attribute value.</returns>
+        public T GetContext<T>(UserContextEnum ucEnum)
+        {
+            return this.GetContext<T>(ucEnum.ToString());
+        }
+
+        /// <summary>
+        /// Set user context for <see cref="UserContextEnum">attribute</see>.
+        /// </summary>
+        /// <typeparam name="T">Type of stored value.</typeparam>
+        /// <param name="ucEnum"><see cref="UserContextEnum">Attribute</see>.</param>
+        /// <param name="obj">Attribute value.</param>
+        public void SetContext<T>(UserContextEnum ucEnum, T obj)
+        {
+            this.SetContext<T>(ucEnum.ToString(), obj);
+        }
+
+        /// <summary>
+        /// Get user context by <see cref="UserContextEnum">attribute</see>.
+        /// </summary>
+        /// <typeparam name="T">Type of stored value.</typeparam>
+        /// <param name="name">Attribute name.</param>
+        /// <returns>Attribute value.</returns>
+        public T GetContext<T>(string name)
+        {
+            if (this.userContextString.ContainsKey(name))
+            {
+                return (T)this.userContextString[name];
+            }
+            else
+            {
+                return default;
             }
         }
 
-        public T GetContext<T>(UserContextEnum ucEnum)
+        /// <summary>
+        /// Set user context for <see cref="UserContextEnum">attribute</see>.
+        /// </summary>
+        /// <typeparam name="T">Type of stored value.</typeparam>
+        /// <param name="name">Attribute name.</param>
+        /// <param name="obj">Attribute value.</param>
+        public void SetContext<T>(string name, T obj)
         {
-            if (_userContext.ContainsKey(ucEnum))
-                return (T)_userContext[ucEnum];
+            if (this.userContextString.ContainsKey(name))
+            {
+                this.userContextString[name] = obj;
+            }
             else
-                return default(T);
-        }
-
-        public bool SetContext<T>(UserContextEnum ucEnum, T obj)
-        {
-            if (_userContext.ContainsKey(ucEnum))
-                _userContext[ucEnum] = obj;
-            else
-                _userContext.Add(ucEnum, obj);
-            return true;
+            {
+                this.userContextString.Add(name, obj);
+            }
         }
     }
 }

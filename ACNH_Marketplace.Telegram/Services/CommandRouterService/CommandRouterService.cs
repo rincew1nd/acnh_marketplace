@@ -1,43 +1,46 @@
-﻿using ACNH_Marketplace.DataBase;
-using ACNH_Marketplace.Telegram.Commands;
-using ACNH_Marketplace.Telegram.Commands.CommandBase;
-using ACNH_Marketplace.Telegram.Enums;
-using Microsoft.EntityFrameworkCore.Internal;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿// <copyright file="CommandRouterService.cs" company="Cattleya">
+// Copyright (c) Cattleya. All rights reserved.
+// </copyright>
 
 namespace ACNH_Marketplace.Telegram.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text.RegularExpressions;
+    using ACNH_Marketplace.Telegram.Enums;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Logging;
+
+    /// <inheritdoc/>
     public class CommandRouterService : ICommandRouterService
     {
-        private readonly Dictionary<UserStateEnum, SortedList<string, string>> _routes;
-        private readonly ILogger _logger;
+        private readonly Dictionary<UserStateEnum, SortedList<string, string>> routes;
+        private readonly ILogger logger;
 
-        private readonly IBotService _botService;
-
-        public CommandRouterService(IBotService botService, IConfiguration config, ILogger<CommandRouterService> logger)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CommandRouterService"/> class.
+        /// </summary>
+        /// <param name="config"><see cref="IConfiguration"/>.</param>
+        /// <param name="logger"><see cref="ILogger"/>.</param>
+        public CommandRouterService(IConfiguration config, ILogger<CommandRouterService> logger)
         {
-            _botService = botService;
+            this.logger = logger;
 
-            _logger = logger;
-
-            _routes = new Dictionary<UserStateEnum, SortedList<string, string>>();
-            config.GetSection("CommandRoutes").Bind(_routes);
+            this.routes = new Dictionary<UserStateEnum, SortedList<string, string>>();
+            config.GetSection("CommandRoutes").Bind(this.routes);
         }
 
+        /// <inheritdoc/>
         public Type FindCommand(PersonifiedUpdate update)
         {
             var types = new List<System.Type>();
 
             var userState = update.Context.GetContext<UserStateEnum>(UserContextEnum.UserState);
 
-            if (_routes.ContainsKey(userState))
+            if (this.routes.ContainsKey(userState))
             {
-                foreach (var commandPattern in _routes[userState])
+                foreach (var commandPattern in this.routes[userState])
                 {
                     if (Regex.IsMatch(update.Command, commandPattern.Key, RegexOptions.IgnoreCase))
                     {
@@ -47,9 +50,11 @@ namespace ACNH_Marketplace.Telegram.Services
             }
 
             if (types.Count > 1)
-                _logger.LogWarning($"Found more than one routes for command - {update.Command}");
+            {
+                this.logger.LogWarning($"Found more than one routes for command - {update.Command}");
+            }
 
-            return !types.Any() ? typeof(WelcomeCommand) : types.First();
+            return /*!types.Any() ? typeof(WelcomeCommand) :*/ types.First();
         }
     }
 }

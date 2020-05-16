@@ -1,25 +1,22 @@
-﻿namespace ACNH_Marketplace.Telegram.Enums
+﻿// <copyright file="UserStateEnum.cs" company="Cattleya">
+// Copyright (c) Cattleya. All rights reserved.
+// </copyright>
+
+namespace ACNH_Marketplace.Telegram.Enums
 {
+    /// <summary>
+    /// Possible user states.
+    /// </summary>
     public enum UserStateEnum : int
     {
-        Default,
-        Error,
+        /// <summary>
+        /// Unknown user state
+        /// </summary>
+        Unknown,
 
-        //Registration
-        Welcome,
-        EnteringIGName,
-        EnteringIslandName,
-        ConfirmRegistration,
-
-        //Host turnip
-        HostTurnipExchange,
-        EnteringUTC,
-        EnteringHTEDescription,
-        EnteringHTEDate,
-        EnteringHTEPrice,
-        ConfirmHTERegistration,
-        EditHTEDate,
-        EditHTEPrice,
-        EditHTEDescription,
+        /// <summary>
+        /// User on main page
+        /// </summary>
+        MainPage,
     }
 }

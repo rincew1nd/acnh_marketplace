@@ -1,48 +1,56 @@
-﻿using ACNH_Marketplace.DataBase.Enums;
-using System;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿// <copyright file="UserReview.cs" company="Cattleya">
+// Copyright (c) Cattleya. All rights reserved.
+// </copyright>
 
 namespace ACNH_Marketplace.DataBase.Models
 {
+    using System;
+    using System.ComponentModel.DataAnnotations;
+    using ACNH_Marketplace.DataBase.Enums;
+
+    /// <summary>
+    /// Users reviews deals with other users.
+    /// </summary>
     public class UserReview
     {
         /// <summary>
-        /// Review entry identifier
+        /// Gets or sets record primary key.
         /// </summary>
+        [Key]
         public Guid Id { get; set; }
 
         /// <summary>
-        /// Type of review
+        /// Gets or sets review type.
         /// </summary>
         public ReviewType Type { get; set; }
 
         /// <summary>
-        /// Review message about user
+        /// Gets or sets review description.
         /// </summary>
         public string Description { get; set; }
 
         /// <summary>
-        /// Review rating
+        /// Gets or sets deal satisfaction rating.
         /// </summary>
         public int Rating { get; set; }
 
         /// <summary>
-        /// Reviewer user id
+        /// Gets or sets reviewer <see cref="User"/> id.
         /// </summary>
         public int ReviewerId { get; set; }
 
         /// <summary>
-        /// Reviewer user object
+        /// Gets or sets reviewer <see cref="User"/> object.
         /// </summary>
         public User Reviewer { get; set; }
 
         /// <summary>
-        /// User id who got reviewed
+        /// Gets or sets reviewed <see cref="User"/> id.
         /// </summary>
         public int ReviewedId { get; set; }
 
         /// <summary>
-        /// User object who got reviewed
+        /// Gets or sets reviewed <see cref="User"/> object.
         /// </summary>
         public User Reviewed { get; set; }
     }
