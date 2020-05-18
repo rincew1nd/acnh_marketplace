@@ -1,16 +1,76 @@
 ﻿{
   "CommandRoutes": {
-    "NotRegistered": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.UserProfileCommand"
-    },
-    "MainPage": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.UserProfileCommand"
-    },
-    "ProfileMain": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.UserProfileCommand"
-    },
-    "ProfileEdit": {
-      ".*": "ACNH_Marketplace.Telegram.Commands.UserProfileCommand"
-    }
+    "Unknown": [
+      {
+        "Pattern": ".*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.MainMenuCommand"
+      }
+    ],
+    "NotRegistered": [
+      {
+        "Pattern": ".*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.UserProfileCommand"
+      }
+    ],
+    "MainPage": [
+      {
+        "Pattern": "/TurnipMarket",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketMainMenuCommand"
+      },
+      {
+        "Pattern": ".*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.MainMenuCommand"
+      }
+    ],
+    "ProfileMain": [
+      {
+        "Pattern": ".*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.UserProfileCommand"
+      }
+    ],
+    "ProfileEdit": [
+      {
+        "Pattern": ".*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.UserProfileCommand"
+      }
+    ],
+    "TurnipMarket": [
+      {
+        "Pattern": "/BackMainMenu",
+        "Type": "ACNH_Marketplace.Telegram.Commands.MainMenuCommand"
+      },
+      {
+        "Pattern": "/(Manage|Create)TMH",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketHosterCommand"
+      },
+      {
+        "Pattern": "/(Manage|Create)TMV",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketVisitorCommand"
+      },
+      {
+        "Pattern": ".*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketMainMenuCommand"
+      }
+    ],
+    "TurnipMarketHoster": [
+      {
+        "Pattern": "/BackTMMM",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketMainMenuCommand"
+      },
+      {
+        "Pattern": ".*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketHosterCommand"
+      }
+    ],
+    "TurnipMarketVisitor": [
+      {
+        "Pattern": "/BackTurnipMarketMenu",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketMainMenuCommand"
+      },
+      {
+        "Pattern": ".*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketVisitorCommand"
+      }
+    ]
   }
 }

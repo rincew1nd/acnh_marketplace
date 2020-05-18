@@ -22,7 +22,7 @@ namespace ACNH_Marketplace.DataBase.Models
         /// <summary>
         /// Gets or sets date when market will be active.
         /// </summary>
-        public DateTime BeginDate { get; set; }
+        public DateTime BeginingDate { get; set; }
 
         /// <summary>
         /// Gets or sets date when market will expire.

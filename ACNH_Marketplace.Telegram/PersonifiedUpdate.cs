@@ -14,9 +14,9 @@ namespace ACNH_Marketplace.Telegram
     public class PersonifiedUpdate
     {
         /// <summary>
-        /// Gets or sets <see cref="UserContext">user context</see>.
+        /// Gets or sets <see cref="Services.UserContext">user context</see>.
         /// </summary>
-        public UserContext Context { get; set; }
+        public UserContext UserContext { get; set; }
 
         /// <summary>
         /// Gets or sets current processing user command.

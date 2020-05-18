@@ -25,14 +25,29 @@ namespace ACNH_Marketplace.Telegram.Helpers
                 case UpdateType.EditedMessage:
                     return (update.Message.From.Id, update.Message.Text, null);
                 case UpdateType.InlineQuery:
-                    return (update.InlineQuery.From.Id, update.InlineQuery.Query, int.Parse(update.InlineQuery.Id));
+                    return (update.InlineQuery.From.Id, update.InlineQuery.Query, null);
                 case UpdateType.ChosenInlineResult:
-                    return (update.ChosenInlineResult.From.Id, update.ChosenInlineResult.Query, int.Parse(update.ChosenInlineResult.InlineMessageId));
+                    return (update.ChosenInlineResult.From.Id, update.ChosenInlineResult.Query, null);
                 case UpdateType.CallbackQuery:
-                    return (update.CallbackQuery.From.Id, update.CallbackQuery.Data, int.Parse(update.CallbackQuery.Id));
+                    return (update.CallbackQuery.From.Id, update.CallbackQuery.Data, update.CallbackQuery.Message.MessageId);
             }
 
             return (0, null, null);
+        }
+
+        /// <summary>
+        /// Convert string to int without exceptions.
+        /// </summary>
+        /// <param name="value">Number in string.</param>
+        /// <returns>Number or null.</returns>
+        public static int? TryParseInt(string value)
+        {
+            if (int.TryParse(value, out var number))
+            {
+                return number;
+            }
+
+            return null;
         }
     }
 }

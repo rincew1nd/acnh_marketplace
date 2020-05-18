@@ -6,20 +6,20 @@ namespace ACNH_Marketplace.Telegram.Commands.CommandBase
 {
     using System.Threading.Tasks;
     using ACNH_Marketplace.DataBase;
-    using ACNH_Marketplace.Telegram.Services;
-    using global::Telegram.Bot;
+    using ACNH_Marketplace.Telegram.Enums;
+    using ACNH_Marketplace.Telegram.Services.BotService;
 
     /// <summary>
-    /// Base <see cref="ICommand"/> implementation with <see cref="TelegramBot"/> and <see cref="MarketplaceContext"/>.
+    /// Base <see cref="ICommand"/> implementation with <see cref="ITelegramBotService"/> and <see cref="MarketplaceContext"/>.
     /// </summary>
     public abstract class BaseCommand : ICommand
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseCommand"/> class.
         /// </summary>
-        /// <param name="botService"><see cref="TelegramBot"/>.</param>
+        /// <param name="botService"><see cref="ITelegramBotService"/>.</param>
         /// <param name="context"><see cref="MarketplaceContext">Database context</see>.</param>
-        public BaseCommand(TelegramBot botService, MarketplaceContext context)
+        public BaseCommand(ITelegramBotService botService, MarketplaceContext context)
         {
             this.Client = botService;
             this.Context = context;
@@ -28,7 +28,7 @@ namespace ACNH_Marketplace.Telegram.Commands.CommandBase
         /// <summary>
         /// Gets a bot service to use it to interact with user.
         /// </summary>
-        protected TelegramBot Client { get; }
+        protected ITelegramBotService Client { get; }
 
         /// <summary>
         /// Gets a database cotext.
@@ -36,6 +36,6 @@ namespace ACNH_Marketplace.Telegram.Commands.CommandBase
         protected MarketplaceContext Context { get; }
 
         /// <inheritdoc/>
-        public abstract Task Execute(PersonifiedUpdate update);
+        public abstract Task<OperationExecutionResult> Execute(PersonifiedUpdate update);
     }
 }

@@ -4,14 +4,16 @@
 
 namespace ACNH_Marketplace.Telegram.Commands
 {
+    using System;
     using System.Linq;
+    using System.Text;
     using System.Threading.Tasks;
     using ACNH_Marketplace.DataBase;
     using ACNH_Marketplace.DataBase.Enums;
     using ACNH_Marketplace.DataBase.Models;
     using ACNH_Marketplace.Telegram.Commands.CommandBase;
     using ACNH_Marketplace.Telegram.Enums;
-    using ACNH_Marketplace.Telegram.Services;
+    using ACNH_Marketplace.Telegram.Services.BotService;
     using global::Telegram.Bot.Types.ReplyMarkups;
     using Microsoft.EntityFrameworkCore;
 
@@ -20,31 +22,29 @@ namespace ACNH_Marketplace.Telegram.Commands
     /// </summary>
     public class UserProfileCommand : BaseCommand
     {
+        private const string WelcomeMessage = @"Befor we start, there are some data you should provide:
+1. Your current in game name (IGN) and island name.
+2. Your current timezone in UTC format for correct date handling between multiple timezones.";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="UserProfileCommand"/> class.
         /// </summary>
-        /// <param name="telegramBot"><see cref="TelegramBot"/>.</param>
+        /// <param name="telegramBot"><see cref="ITelegramBotService"/>.</param>
         /// <param name="context"><see cref="MarketplaceContext"/>.</param>
-        public UserProfileCommand(TelegramBot telegramBot, MarketplaceContext context)
+        public UserProfileCommand(ITelegramBotService telegramBot, MarketplaceContext context)
             : base(telegramBot, context)
         {
         }
 
-        /// <summary>
-        /// Gets or sets current user state.
-        /// </summary>
         private UserStateEnum UserState { get; set; }
 
-        /// <summary>
-        /// Gets or sets current personified update.
-        /// </summary>
         private PersonifiedUpdate Update { get; set; }
 
         /// <inheritdoc/>
-        public override async Task Execute(PersonifiedUpdate update)
+        public override async Task<OperationExecutionResult> Execute(PersonifiedUpdate update)
         {
             this.Update = update;
-            this.UserState = update.Context.GetContext<UserStateEnum>(UserContextEnum.UserState);
+            this.UserState = update.UserContext.GetContext<UserStateEnum>(UserContextEnum.UserState);
 
             switch (this.UserState)
             {
@@ -52,18 +52,28 @@ namespace ACNH_Marketplace.Telegram.Commands
                     await this.RegistrateUser();
                     break;
                 case UserStateEnum.ProfileMain:
-                    if (string.IsNullOrWhiteSpace(update.Command) || update.Command == "/ProfileMain")
+                    if (update.Command == "/BackMainMenu")
                     {
-                        await this.ProfileMain();
+                        update.UserContext.SetContext(UserContextEnum.UserState, UserStateEnum.MainPage);
+                        return OperationExecutionResult.Reroute;
+                    }
+                    else if (update.Command.StartsWith("/Change"))
+                    {
+                        await this.ProfileEdit();
                     }
                     else
                     {
-                        await this.ProfileEdit();
+                        await this.ProfileMain();
                     }
 
                     break;
                 case UserStateEnum.ProfileEdit:
-                    if (update.Command == "/ProfileMain")
+                    if (update.Command == "/BackMainMenu")
+                    {
+                        update.UserContext.SetContext(UserContextEnum.UserState, UserStateEnum.MainPage);
+                        return OperationExecutionResult.Reroute;
+                    }
+                    else if (update.Command == "/ProfileMain")
                     {
                         await this.ProfileMain();
                     }
@@ -75,24 +85,32 @@ namespace ACNH_Marketplace.Telegram.Commands
                     break;
             }
 
-            return;
+            return OperationExecutionResult.Success;
         }
 
         #region Operations
         private async Task ProfileMain()
         {
-            this.Update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.ProfileMain);
-            await this.Client.SendMessageAsync(
-                this.Update.Context.UserId,
-                "Profile management page.\nChose operation:",
+            this.Update.UserContext.SetContext(UserContextEnum.UserState, UserStateEnum.ProfileMain);
+
+            await this.Client.EditMessageAsync(
+                this.Update.UserContext.TelegramId,
+                this.Update.MessageId,
+                await this.GetProfileInfo(),
                 replyMarkup: new InlineKeyboardMarkup(
                     new[]
                     {
-                        new[] { new InlineKeyboardButton() { CallbackData = "/ChangeIGN", Text = "Change IGN" } },
-                        new[] { new InlineKeyboardButton() { CallbackData = "/ChangeIN", Text = "Change island name" } },
-                        new[] { new InlineKeyboardButton() { CallbackData = "/ChangeTZ", Text = "Change timezone" } },
-                        new[] { new InlineKeyboardButton() { CallbackData = "/ChangeContacts", Text = "Change contacts" } },
-                        new[] { new InlineKeyboardButton() { CallbackData = "/BackM", Text = "<- Back" } },
+                        new[]
+                        {
+                            new InlineKeyboardButton() { CallbackData = "/ChangeIGN", Text = "Change IGN" },
+                            new InlineKeyboardButton() { CallbackData = "/ChangeIN", Text = "Change island name" },
+                        },
+                        new[]
+                        {
+                            new InlineKeyboardButton() { CallbackData = "/ChangeTZ", Text = "Change timezone" },
+                            new InlineKeyboardButton() { CallbackData = "/ChangeContacts", Text = "Change contacts" },
+                        },
+                        new[] { new InlineKeyboardButton() { CallbackData = "/BackMainMenu", Text = "<- Back" } },
                     }));
             return;
         }
@@ -100,37 +118,37 @@ namespace ACNH_Marketplace.Telegram.Commands
         private async Task ProfileEdit()
         {
             var result = false;
-            this.Update.Context.SetContext(UserContextEnum.UserState, UserStateEnum.ProfileEdit);
+            this.Update.UserContext.SetContext(UserContextEnum.UserState, UserStateEnum.ProfileEdit);
 
             if (this.Update.Command == "/ChangeIGN")
             {
                 await this.EnteringIGN();
-                this.Update.Context.SetContext("ProfileEditType", 1);
+                this.Update.UserContext.SetContext("ProfileEditType", 1);
                 return;
             }
 
             if (this.Update.Command == "/ChangeIN")
             {
                 await this.EnteringIGN();
-                this.Update.Context.SetContext("ProfileEditType", 2);
+                this.Update.UserContext.SetContext("ProfileEditType", 2);
                 return;
             }
 
             if (this.Update.Command == "/ChangeTZ")
             {
                 await this.EnteringIGN();
-                this.Update.Context.SetContext("ProfileEditType", 3);
+                this.Update.UserContext.SetContext("ProfileEditType", 3);
                 return;
             }
 
             if (this.Update.Command == "/ChangeContacts")
             {
                 await this.ProfileContactTypes();
-                this.Update.Context.SetContext("ProfileEditType", 4);
+                this.Update.UserContext.SetContext("ProfileEditType", 4);
                 return;
             }
 
-            switch (this.Update.Context.GetContext<int>("ProfileEditType"))
+            switch (this.Update.UserContext.GetContext<int>("ProfileEditType"))
             {
                 case 1:
                     result = await this.ValidateIGN();
@@ -161,27 +179,34 @@ namespace ACNH_Marketplace.Telegram.Commands
 
         private async Task ProfileContactTypes()
         {
-            await this.Client.EditMessage(
-                this.Update.Context.UserId,
+            await this.Client.EditMessageAsync(
+                this.Update.UserContext.TelegramId,
                 this.Update.MessageId,
                 "Choose contact type:",
                 new InlineKeyboardMarkup(
                     new[]
                     {
-                        new[] { new InlineKeyboardButton() { CallbackData = "/ChangeReddit", Text = "Change Reddit" } },
-                        new[] { new InlineKeyboardButton() { CallbackData = "/ChangeDiscord", Text = "Change Discord" } },
-                        new[] { new InlineKeyboardButton() { CallbackData = "/ChangeTwitter", Text = "Change Twitter" } },
-                        new[] { new InlineKeyboardButton() { CallbackData = "/ChangeFacebook", Text = "Change Facebook" } },
+                        new[]
+                        {
+                            new InlineKeyboardButton() { CallbackData = "/ChangeReddit", Text = "Change Reddit" },
+                            new InlineKeyboardButton() { CallbackData = "/ChangeDiscord", Text = "Change Discord" },
+                        },
+                        new[]
+                        {
+                            new InlineKeyboardButton() { CallbackData = "/ChangeTwitter", Text = "Change Twitter" },
+                            new InlineKeyboardButton() { CallbackData = "/ChangeFacebook", Text = "Change Facebook" },
+                        },
                         new[] { new InlineKeyboardButton() { CallbackData = "/ProfileMain", Text = "<- Back" } },
                     }));
         }
 
         private async Task RegistrateUser()
         {
-            var registrationState = this.Update.Context.GetContext<int>("RegistrationState");
+            var registrationState = this.Update.UserContext.GetContext<int>("RegistrationState");
             switch (registrationState)
             {
                 case 0:
+                    await this.Client.SendMessageAsync(this.Update.UserContext.TelegramId, WelcomeMessage);
                     await this.EnteringIGN();
                     break;
                 case 1:
@@ -212,29 +237,29 @@ namespace ACNH_Marketplace.Telegram.Commands
         #region Entering data messages
         private async Task EnteringIGN()
         {
-            await this.Client.EditMessage(
-                this.Update.Context.UserId,
+            await this.Client.EditMessageAsync(
+                this.Update.UserContext.TelegramId,
                 this.Update.MessageId,
                 "Please enter in game name (IGN):");
-            this.Update.Context.SetContext("RegistrationState", 1);
+            this.Update.UserContext.SetContext("RegistrationState", 1);
         }
 
         private async Task EnteringIslandName()
         {
-            await this.Client.EditMessage(
-                this.Update.Context.UserId,
+            await this.Client.EditMessageAsync(
+                this.Update.UserContext.TelegramId,
                 this.Update.MessageId,
                 "Please enter island name:");
-            this.Update.Context.SetContext("RegistrationState", 2);
+            this.Update.UserContext.SetContext("RegistrationState", 2);
         }
 
         private async Task EnteringTimezone()
         {
-            await this.Client.EditMessage(
-                this.Update.Context.UserId,
+            await this.Client.EditMessageAsync(
+                this.Update.UserContext.TelegramId,
                 this.Update.MessageId,
                 "Please enter timezone (from -14 to 14):");
-            this.Update.Context.SetContext("RegistrationState", 3);
+            this.Update.UserContext.SetContext("RegistrationState", 3);
         }
 
         private async Task EnteringContact()
@@ -242,22 +267,24 @@ namespace ACNH_Marketplace.Telegram.Commands
             switch (this.Update.Command)
             {
                 case "/ChangeReddit":
-                    this.Update.Context.SetContext("UserContactType", UserContactType.Reddit);
-                    await this.Client.EditMessage(this.Update.Context.UserId, this.Update.MessageId, "Enter Reddit username:");
+                    this.Update.UserContext.SetContext("UserContactType", UserContactType.Reddit);
+                    await this.Client.EditMessageAsync(this.Update.UserContext.TelegramId, this.Update.MessageId, "Enter Reddit username:");
                     break;
                 case "/ChangeDiscord":
-                    this.Update.Context.SetContext("UserContactType", UserContactType.Discord);
-                    await this.Client.EditMessage(this.Update.Context.UserId, this.Update.MessageId, "Enter Discord username:");
+                    this.Update.UserContext.SetContext("UserContactType", UserContactType.Discord);
+                    await this.Client.EditMessageAsync(this.Update.UserContext.TelegramId, this.Update.MessageId, "Enter Discord username:");
                     break;
                 case "/ChangeTwitter":
-                    this.Update.Context.SetContext("UserContactType", UserContactType.Twitter);
-                    await this.Client.EditMessage(this.Update.Context.UserId, this.Update.MessageId, "Enter Twitter username:");
+                    this.Update.UserContext.SetContext("UserContactType", UserContactType.Twitter);
+                    await this.Client.EditMessageAsync(this.Update.UserContext.TelegramId, this.Update.MessageId, "Enter Twitter username:");
                     break;
                 case "/ChangeFacebook":
-                    this.Update.Context.SetContext("UserContactType", UserContactType.Facebook);
-                    await this.Client.EditMessage(this.Update.Context.UserId, this.Update.MessageId, "Enter Facebook username:");
+                    this.Update.UserContext.SetContext("UserContactType", UserContactType.Facebook);
+                    await this.Client.EditMessageAsync(this.Update.UserContext.TelegramId, this.Update.MessageId, "Enter Facebook username:");
                     break;
             }
+
+            this.Update.UserContext.SetContext("ProfileEditType", 5);
         }
         #endregion
 
@@ -266,7 +293,7 @@ namespace ACNH_Marketplace.Telegram.Commands
         {
             if (string.IsNullOrWhiteSpace(this.Update.Command))
             {
-                await this.Client.SendMessageAsync(this.Update.Context.UserId, "IGN should not be empty.");
+                await this.Client.SendMessageAsync(this.Update.UserContext.TelegramId, "IGN should not be empty.");
                 await this.EnteringIGN();
                 return false;
             }
@@ -274,13 +301,13 @@ namespace ACNH_Marketplace.Telegram.Commands
             if (this.Update.Command.Length > 10)
             {
                 await this.Client.SendMessageAsync(
-                    this.Update.Context.UserId,
+                    this.Update.UserContext.TelegramId,
                     "IGN should not contains more than 10 symbols.");
                 await this.EnteringIGN();
                 return false;
             }
 
-            this.Update.Context.SetContext("IGN", this.Update.Command);
+            this.Update.UserContext.SetContext("IGN", this.Update.Command);
             return true;
         }
 
@@ -289,7 +316,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             if (string.IsNullOrWhiteSpace(this.Update.Command))
             {
                 await this.Client.SendMessageAsync(
-                    this.Update.Context.UserId,
+                    this.Update.UserContext.TelegramId,
                     "Island name should not be empty.");
                 await this.EnteringIslandName();
                 return false;
@@ -298,13 +325,13 @@ namespace ACNH_Marketplace.Telegram.Commands
             if (this.Update.Command.Length > 10)
             {
                 await this.Client.SendMessageAsync(
-                    this.Update.Context.UserId,
+                    this.Update.UserContext.TelegramId,
                     "Island name should not contains more than 10 symbols.");
                 await this.EnteringIslandName();
                 return false;
             }
 
-            this.Update.Context.SetContext("IslandName", this.Update.Command);
+            this.Update.UserContext.SetContext("IslandName", this.Update.Command);
             return true;
         }
 
@@ -313,7 +340,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             if (!int.TryParse(this.Update.Command, out var timezone))
             {
                 await this.Client.SendMessageAsync(
-                    this.Update.Context.UserId,
+                    this.Update.UserContext.TelegramId,
                     "Entered not valid timezone. Only numbers available.");
                 await this.EnteringTimezone();
                 return false;
@@ -322,13 +349,13 @@ namespace ACNH_Marketplace.Telegram.Commands
             if (timezone < -14 || timezone > 14)
             {
                 await this.Client.SendMessageAsync(
-                    this.Update.Context.UserId,
+                    this.Update.UserContext.TelegramId,
                     "Timezones limited to more than -14 and less than 14.");
                 await this.EnteringTimezone();
                 return false;
             }
 
-            this.Update.Context.SetContext("Timezone", timezone);
+            this.Update.UserContext.Timezone = timezone;
             return true;
         }
 
@@ -337,7 +364,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             if (string.IsNullOrWhiteSpace(this.Update.Command))
             {
                 await this.Client.SendMessageAsync(
-                    this.Update.Context.UserId,
+                    this.Update.UserContext.TelegramId,
                     "Island name should not be empty.");
                 await this.EnteringIGN();
                 return false;
@@ -347,21 +374,44 @@ namespace ACNH_Marketplace.Telegram.Commands
         }
         #endregion
 
-        #region Database updates
+        #region Database operations
+        private async Task<string> GetProfileInfo()
+        {
+            var user = await this.Context.Users
+                .Include(u => u.UserContacts)
+                .FirstOrDefaultAsync(u => u.TelegramId == this.Update.UserContext.TelegramId);
+
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException("Unregistered user accessed profile page");
+            }
+            else
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine($"In Game Name: {user.InGameName}");
+                sb.AppendLine($"Island Name: {user.IslandName}");
+                sb.AppendLine($"Timezone: UTC{user.Timezone}");
+                sb.AppendLine($"Contacts:");
+                sb.AppendLine($"\t{string.Join("\n\t", user.UserContacts.Select(uc => $"{uc.Type} - {uc.Contact}"))}");
+                sb.AppendLine("\nWhat do you wish to change?");
+                return sb.ToString();
+            }
+        }
+
         private async Task UpdateUser()
         {
-            var ign = this.Update.Context.GetContext<string>("IGN");
-            var island = this.Update.Context.GetContext<string>("IslandName");
-            var timezone = this.Update.Context.GetContext<int>("Timezone");
+            var ign = this.Update.UserContext.GetContext<string>("IGN");
+            var island = this.Update.UserContext.GetContext<string>("IslandName");
+            var timezone = this.Update.UserContext.Timezone;
 
             var user = await this.Context.Users
-                .FirstOrDefaultAsync(u => u.TelegramId == this.Update.Context.UserId);
+                .FirstOrDefaultAsync(u => u.TelegramId == this.Update.UserContext.TelegramId);
 
             if (user == null)
             {
                 user = new User()
                 {
-                    TelegramId = this.Update.Context.UserId,
+                    TelegramId = this.Update.UserContext.TelegramId,
                     InGameName = ign,
                     IslandName = island,
                     Timezone = timezone,
@@ -377,7 +427,7 @@ namespace ACNH_Marketplace.Telegram.Commands
 
                 if (!string.IsNullOrWhiteSpace(island))
                 {
-                    user.InGameName = ign;
+                    user.IslandName = island;
                 }
 
                 if (timezone != 0)
@@ -390,22 +440,19 @@ namespace ACNH_Marketplace.Telegram.Commands
 
             await this.Context.SaveChangesAsync();
 
-            this.Update.Context.RemoveContext("IGN");
-            this.Update.Context.RemoveContext("IslandName");
-            this.Update.Context.RemoveContext("Timezone");
-            this.Update.Context.RemoveContext("ProfileEditType");
+            this.Update.UserContext.RemoveContext("ProfileEditType");
 
             await this.ProfileMain();
         }
 
         private async Task UpdateSocial()
         {
-            var type = this.Update.Context.GetContext<UserContactType>("UserContactType");
-            var contact = this.Update.Context.GetContext<string>("UserContact");
+            var type = this.Update.UserContext.GetContext<UserContactType>("UserContactType");
+            var contact = this.Update.Command;
 
             var user = await this.Context.Users
                 .Include(u => u.UserContacts)
-                .FirstOrDefaultAsync(u => u.TelegramId == this.Update.Context.UserId);
+                .FirstOrDefaultAsync(u => u.TelegramId == this.Update.UserContext.TelegramId);
             UserContact userContacts = user.UserContacts.FirstOrDefault(uc => uc.Type == type);
 
             if (userContacts == null)
@@ -425,9 +472,10 @@ namespace ACNH_Marketplace.Telegram.Commands
             }
 
             await this.Context.SaveChangesAsync();
-            this.Update.Context.RemoveContext("UserContact");
-            this.Update.Context.RemoveContext("UserContactType");
-            this.Update.Context.RemoveContext("ProfileEditType");
+            this.Update.UserContext.RemoveContext("UserContactType");
+            this.Update.UserContext.RemoveContext("ProfileEditType");
+
+            await this.ProfileMain();
         }
         #endregion
     }

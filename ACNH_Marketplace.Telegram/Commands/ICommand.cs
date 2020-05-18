@@ -5,6 +5,7 @@
 namespace ACNH_Marketplace.Telegram.Commands.CommandBase
 {
     using System.Threading.Tasks;
+    using ACNH_Marketplace.Telegram.Enums;
 
     /// <summary>
     /// <see cref="ICommand"/> interface to process user update.
@@ -15,7 +16,7 @@ namespace ACNH_Marketplace.Telegram.Commands.CommandBase
         /// Process user update.
         /// </summary>
         /// <param name="update"><see cref="PersonifiedUpdate">Personified user update</see>.</param>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        Task Execute(PersonifiedUpdate update);
+        /// <returns>A <see cref="Task"/> with operation execution result - <see cref="OperationExecutionResult"/>.</returns>
+        Task<OperationExecutionResult> Execute(PersonifiedUpdate update);
     }
 }

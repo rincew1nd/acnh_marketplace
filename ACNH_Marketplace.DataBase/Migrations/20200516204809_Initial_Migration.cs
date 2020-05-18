@@ -6,6 +6,7 @@ namespace ACNH_Marketplace.DataBase.Migrations
 {
     public partial class Initial_Migration : Migration
     {
+        /// <inheritdoc/>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -29,7 +30,7 @@ namespace ACNH_Marketplace.DataBase.Migrations
                 columns: table => new
                 {
                     Id = table.Column<byte[]>(nullable: false),
-                    BeginDate = table.Column<DateTime>(nullable: false),
+                    BeginingDate = table.Column<DateTime>(nullable: false),
                     ExpirationDate = table.Column<DateTime>(nullable: false),
                     Description = table.Column<string>(nullable: true),
                     TurnipPrice = table.Column<int>(nullable: false),
@@ -177,6 +178,7 @@ namespace ACNH_Marketplace.DataBase.Migrations
                 column: "ReviewerId");
         }
 
+        /// <inheritdoc/>
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

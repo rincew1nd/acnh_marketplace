@@ -53,7 +53,7 @@ namespace ACNH_Marketplace.DataBase.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("varbinary(16)");
 
-                    b.Property<DateTime>("BeginDate")
+                    b.Property<DateTime>("BeginingDate")
                         .HasColumnType("datetime");
 
                     b.Property<string>("Description")

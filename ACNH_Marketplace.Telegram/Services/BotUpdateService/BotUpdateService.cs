@@ -7,6 +7,7 @@ namespace ACNH_Marketplace.Telegram.Services
     using System;
     using System.Threading.Tasks;
     using ACNH_Marketplace.Telegram.Commands.CommandBase;
+    using ACNH_Marketplace.Telegram.Enums;
     using ACNH_Marketplace.Telegram.Helpers;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -36,10 +37,15 @@ namespace ACNH_Marketplace.Telegram.Services
         {
             try
             {
-                using var scope = this.scopeFactory.CreateScope();
-                var type = this.commandRouter.FindCommand(update);
-                var command = (ICommand)scope.ServiceProvider.GetService(type);
-                await command.Execute(update);
+                var result = OperationExecutionResult.Reroute;
+                do
+                {
+                    using var scope = this.scopeFactory.CreateScope();
+                    var type = this.commandRouter.FindCommand(update);
+                    var command = (ICommand)scope.ServiceProvider.GetService(type);
+                    result = await command.Execute(update);
+                }
+                while (result == OperationExecutionResult.Reroute);
             }
             catch (Exception ex)
             {

@@ -33,5 +33,20 @@ namespace ACNH_Marketplace.Telegram.Enums
         /// Edit profile menu.
         /// </summary>
         ProfileEdit,
+
+        /// <summary>
+        /// Turnip market main menu.
+        /// </summary>
+        TurnipMarket,
+
+        /// <summary>
+        /// Turnip market Hoster menu.
+        /// </summary>
+        TurnipMarketHoster,
+
+        /// <summary>
+        /// Turnip market Visitor menu.
+        /// </summary>
+        TurnipMarketVisitor,
     }
 }

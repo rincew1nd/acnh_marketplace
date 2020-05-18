@@ -8,14 +8,16 @@ namespace ACNH_Marketplace.Telegram.Services
     using System.Collections.Generic;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using ACNH_Marketplace.Telegram.Commands;
     using ACNH_Marketplace.Telegram.Enums;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
 
     /// <inheritdoc/>
     public class CommandRouterService : ICommandRouterService
     {
-        private readonly Dictionary<UserStateEnum, SortedList<string, string>> routes;
+        private readonly Dictionary<UserStateEnum, Route[]> routes;
         private readonly ILogger logger;
 
         /// <summary>
@@ -27,7 +29,7 @@ namespace ACNH_Marketplace.Telegram.Services
         {
             this.logger = logger;
 
-            this.routes = new Dictionary<UserStateEnum, SortedList<string, string>>();
+            this.routes = new Dictionary<UserStateEnum, Route[]>();
             config.GetSection("CommandRoutes").Bind(this.routes);
         }
 
@@ -36,15 +38,16 @@ namespace ACNH_Marketplace.Telegram.Services
         {
             var types = new List<System.Type>();
 
-            var userState = update.Context.GetContext<UserStateEnum>(UserContextEnum.UserState);
+            var userState = update.UserContext.GetContext<UserStateEnum>(UserContextEnum.UserState);
 
             if (this.routes.ContainsKey(userState))
             {
                 foreach (var commandPattern in this.routes[userState])
                 {
-                    if (Regex.IsMatch(update.Command, commandPattern.Key, RegexOptions.IgnoreCase))
+                    if (Regex.IsMatch(update.Command, commandPattern.Pattern, RegexOptions.IgnoreCase))
                     {
-                        types.Add(Type.GetType(commandPattern.Value));
+                        types.Add(Type.GetType(commandPattern.Type));
+                        break;
                     }
                 }
             }
@@ -54,7 +57,23 @@ namespace ACNH_Marketplace.Telegram.Services
                 this.logger.LogWarning($"Found more than one routes for command - {update.Command}");
             }
 
-            return /*!types.Any() ? typeof(WelcomeCommand) :*/ types.First();
+            return !types.Any() ? typeof(MainMenuCommand) : types.First();
+        }
+
+        /// <summary>
+        /// Command route.
+        /// </summary>
+        public class Route
+        {
+            /// <summary>
+            /// Gets or sets pattern (regex) for command.
+            /// </summary>
+            public string Pattern { get; set; }
+
+            /// <summary>
+            /// Gets or sets type for command.
+            /// </summary>
+            public string Type { get; set; }
         }
     }
 }

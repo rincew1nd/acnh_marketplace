@@ -6,6 +6,7 @@ namespace ACNH_Marketplace.Telegram.Services
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using ACNH_Marketplace.Telegram.Services.BotService;
     using Microsoft.Extensions.Hosting;
 
     /// <summary>
@@ -18,7 +19,7 @@ namespace ACNH_Marketplace.Telegram.Services
         /// </summary>
         /// <param name="service">Telegram Bot Client.</param>
         #pragma warning disable IDE0060 // Remove unused parameter
-        public ActivatorService(TelegramBot service)
+        public ActivatorService(ITelegramBotService service)
         #pragma warning restore IDE0060 // Remove unused parameter
         {
         }

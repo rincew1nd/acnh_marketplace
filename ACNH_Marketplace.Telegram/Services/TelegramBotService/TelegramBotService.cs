@@ -1,8 +1,8 @@
-﻿// <copyright file="TelegramBot.cs" company="Cattleya">
+﻿// <copyright file="TelegramBotService.cs" company="Cattleya">
 // Copyright (c) Cattleya. All rights reserved.
 // </copyright>
 
-namespace ACNH_Marketplace.Telegram.Services
+namespace ACNH_Marketplace.Telegram.Services.BotService
 {
     using System;
     using System.Net;
@@ -16,17 +16,17 @@ namespace ACNH_Marketplace.Telegram.Services
     /// <summary>
     /// Telegram Bot client.
     /// </summary>
-    public class TelegramBot : IDisposable
+    public class TelegramBotService : ITelegramBotService, IDisposable
     {
         private readonly ILogger logger;
         private readonly BotConfiguration config;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TelegramBot"/> class.
+        /// Initializes a new instance of the <see cref="TelegramBotService"/> class.
         /// </summary>
         /// <param name="logger"><see cref="ILogger"/>.</param>
         /// <param name="config"><see cref="BotConfiguration"/>.</param>
-        public TelegramBot(ILogger<TelegramBot> logger, BotConfiguration config)
+        public TelegramBotService(ILogger<TelegramBotDevService> logger, BotConfiguration config)
         {
             this.logger = logger;
             this.config = config;
@@ -51,34 +51,18 @@ namespace ACNH_Marketplace.Telegram.Services
             this.logger.LogInformation($"Bot {me.Id}-{me.FirstName} is active.");
         }
 
-        /// <summary>
-        /// Gets telegram client instance.
-        /// </summary>
+        /// <inheritdoc/>
         public TelegramBotClient Client { get; private set; }
 
-        /// <summary>
-        /// Send text message to Telegram API.
-        /// </summary>
-        /// <param name="userId">Reciever user id.</param>
-        /// <param name="message">Mesasge text.</param>
-        /// <param name="replyTo">Reply to message id.</param>
-        /// <param name="replyMarkup">Reply markup (custom keyboard).</param>
-        /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
+        /// <inheritdoc/>
         public async Task<Message> SendMessageAsync(int userId, string message, int replyTo = 0, IReplyMarkup replyMarkup = null)
         {
             return await this.Client
                 .SendTextMessageAsync(userId, message, ParseMode.Default, true, true, replyTo, replyMarkup);
         }
 
-        /// <summary>
-        /// Edit message by Telegram API.
-        /// </summary>
-        /// <param name="userId">Reciever user id.</param>
-        /// <param name="messageId">Edit message id.</param>
-        /// <param name="message">Mesasge text.</param>
-        /// <param name="replyMarkup">Reply markup (custom keyboard).</param>
-        /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
-        public async Task<Message> EditMessage(
+        /// <inheritdoc/>
+        public async Task<Message> EditMessageAsync(
             int userId, int? messageId, string message = null, InlineKeyboardMarkup replyMarkup = null)
         {
             if (!messageId.HasValue)

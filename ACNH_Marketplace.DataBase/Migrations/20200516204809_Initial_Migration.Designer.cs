@@ -10,8 +10,11 @@ namespace ACNH_Marketplace.DataBase.Migrations
 {
     [DbContext(typeof(MarketplaceContext))]
     [Migration("20200516204809_Initial_Migration")]
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     partial class Initial_Migration
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
+        /// <inheritdoc/>
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

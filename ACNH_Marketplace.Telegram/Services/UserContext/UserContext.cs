@@ -4,6 +4,7 @@
 
 namespace ACNH_Marketplace.Telegram.Services
 {
+    using System;
     using System.Collections.Generic;
     using ACNH_Marketplace.DataBase.Models;
     using ACNH_Marketplace.Telegram.Enums;
@@ -27,16 +28,15 @@ namespace ACNH_Marketplace.Telegram.Services
         /// <param name="userId">Telegram user id.</param>
         public UserContext(User user, int userId)
         {
-            this.UserId = userId;
+            this.TelegramId = userId;
             if (user != null)
             {
                 this.userContext = new Dictionary<string, object>()
                 {
                     { UserContextEnum.UserState.ToString(), UserStateEnum.MainPage },
-                    { UserContextEnum.InGameName.ToString(), user.InGameName },
-                    { UserContextEnum.IslandName.ToString(), user.IslandName },
-                    { UserContextEnum.Timezone.ToString(), user.Timezone },
                 };
+                this.UserId = user.Id;
+                this.Timezone = user.Timezone;
             }
             else
             {
@@ -48,9 +48,19 @@ namespace ACNH_Marketplace.Telegram.Services
         }
 
         /// <summary>
-        /// Gets or sets user id.
+        /// Gets or sets users telegram id.
         /// </summary>
-        public int UserId { get; set; }
+        public int TelegramId { get; set; }
+
+        /// <summary>
+        /// Gets or sets users DB id.
+        /// </summary>
+        public Guid UserId { get; set; }
+
+        /// <summary>
+        /// Gets or sets user timezone.
+        /// </summary>
+        public int Timezone { get; set; }
 
         /// <summary>
         /// Get user context by <see cref="UserContextEnum">attribute</see>.

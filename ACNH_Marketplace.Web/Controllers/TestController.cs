@@ -4,6 +4,7 @@
 
 namespace ACNH_Marketplace.Web.Controllers
 {
+    using ACNH_Marketplace.Telegram.Services;
     using Microsoft.AspNetCore.Mvc;
 
     /// <summary>
@@ -25,7 +26,7 @@ namespace ACNH_Marketplace.Web.Controllers
         /// </summary>
         /// <returns>Stub.</returns>
         [HttpGet]
-        [Route("getUser")]
+        [Route("isworking")]
         public bool IsWorking()
         {
             return true;

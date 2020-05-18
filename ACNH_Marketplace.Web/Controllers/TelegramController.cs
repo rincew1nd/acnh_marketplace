@@ -52,7 +52,7 @@ namespace ACNH_Marketplace.Web.Controllers
             PersonifiedUpdate personifiedUpdate = new PersonifiedUpdate()
             {
                 Update = update,
-                Context = userContext,
+                UserContext = userContext,
                 Command = command,
                 MessageId = messageId,
             };
