@@ -58,18 +58,32 @@
         "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketMainMenuCommand"
       },
       {
+        "Pattern": "/FindVisitor.*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketFinderCommand"
+      },
+      {
         "Pattern": ".*",
         "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketHosterCommand"
       }
     ],
     "TurnipMarketVisitor": [
       {
-        "Pattern": "/BackTurnipMarketMenu",
+        "Pattern": "/BackTMMM",
         "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketMainMenuCommand"
+      },
+      {
+        "Pattern": "/FindHoster.*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketFinderCommand"
       },
       {
         "Pattern": ".*",
         "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketVisitorCommand"
+      }
+    ],
+    "TurnipMarketFinder": [
+      {
+        "Pattern": ".*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketFinderCommand"
       }
     ]
   }

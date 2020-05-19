@@ -96,7 +96,7 @@ namespace ACNH_Marketplace.Telegram.Commands
                 {
                     new InlineKeyboardButton()
                     {
-                        Text = $"{tmhInfo.ExpirationDate.ToUserDate(this.Update.UserContext.Timezone)}. Turnip cost {tmhInfo.TurnipPrice}",
+                        Text = $"{tmhInfo.ExpirationDate.ToUserDate(this.Update.UserContext.Timezone)}. Turnip cost {tmhInfo.Price}",
                         CallbackData = $"/ManageTMH {tmhInfo.Id}",
                     },
                 });
@@ -128,7 +128,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             var sb = new StringBuilder();
             sb.AppendLine($"Available from - {DateTimeConverter.ToUserDate(tmh.BeginingDate, this.Update.UserContext.Timezone)}");
             sb.AppendLine($"Expires - {DateTimeConverter.ToUserDate(tmh.ExpirationDate, this.Update.UserContext.Timezone)}");
-            sb.AppendLine($"Turnip price - {tmh.TurnipPrice}");
+            sb.AppendLine($"Turnip price - {tmh.Price}");
             sb.AppendLine($"Description - {tmh.Description}");
             sb.AppendLine($"\nWhat do you wish to change?");
 
@@ -151,6 +151,7 @@ namespace ACNH_Marketplace.Telegram.Commands
                             new InlineKeyboardButton() { CallbackData = "/ChangeDescription", Text = "Change description" },
                             new InlineKeyboardButton() { CallbackData = "/HosterCode", Text = "Get market code" },
                         },
+                        new[] { new InlineKeyboardButton() { CallbackData = $"/FindVisitor {tmh.Id}", Text = "Find visitors" } },
                         new[] { new InlineKeyboardButton() { CallbackData = "/ManageTMH", Text = "<- Back" } },
                     }));
         }
@@ -348,7 +349,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             {
                 tmh.BeginingDate = beginningDate == default ? tmh.BeginingDate : beginningDate;
                 tmh.ExpirationDate = expirationDate == default ? tmh.ExpirationDate : expirationDate;
-                tmh.TurnipPrice = price == default ? tmh.TurnipPrice : price;
+                tmh.Price = price == default ? tmh.Price : price;
                 tmh.Description = string.IsNullOrWhiteSpace(description) ? tmh.Description : description;
                 this.Context.Update(tmh);
             }
@@ -360,7 +361,7 @@ namespace ACNH_Marketplace.Telegram.Commands
                     UserId = this.Update.UserContext.UserId,
                     BeginingDate = beginningDate,
                     ExpirationDate = expirationDate,
-                    TurnipPrice = price,
+                    Price = price,
                     Description = description,
                 };
                 await this.Context.AddAsync(tmh);
@@ -368,7 +369,7 @@ namespace ACNH_Marketplace.Telegram.Commands
 
             await this.Context.SaveChangesAsync();
 
-            this.Update.UserContext.RemoveContext("HosterId");
+            this.Update.UserContext.RemoveContext("TMHId");
             this.Update.UserContext.RemoveContext("HosterDate");
             this.Update.UserContext.RemoveContext("HosterPrice");
             this.Update.UserContext.RemoveContext("HosterDescription");

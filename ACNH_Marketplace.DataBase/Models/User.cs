@@ -50,14 +50,14 @@ namespace ACNH_Marketplace.DataBase.Models
         public IList<UserReview> UserReviews { get; set; }
 
         /// <summary>
-        /// Gets or sets collection of <see cref="TurnipMarketHoster">hosted turnip markets</see> by user.
+        /// Gets or sets collection of <see cref="TurnipMarketHoster">hosted turnip markets</see> from user.
         /// </summary>
         public IList<TurnipMarketHoster> Hosts { get; set; }
 
         /// <summary>
-        /// Gets or sets collection of <see cref="TurnipMarketVisitor">turnip market visit applications</see> by user.
+        /// Gets or sets <see cref="TurnipMarketVisitor">turnip market visit application</see> from user.
         /// </summary>
-        public IList<TurnipMarketVisitor> Visits { get; set; }
+        public TurnipMarketVisitor Visits { get; set; }
 
         /// <summary>
         /// Gets or sets user contacts.

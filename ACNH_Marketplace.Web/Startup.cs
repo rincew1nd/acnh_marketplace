@@ -42,7 +42,7 @@ namespace ACNH_Marketplace.Web
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<MarketplaceContext>(options =>
-                options.UseMySQL(this.Configuration.GetConnectionString("MarketplaceDatabase")));
+                options.UseNpgsql(this.Configuration.GetConnectionString("MarketplaceDatabase")));
 
             services.AddControllers().AddNewtonsoftJson();
 
@@ -64,6 +64,8 @@ namespace ACNH_Marketplace.Web
             services.AddScoped<UserProfileCommand>();
             services.AddScoped<TurnipMarketMainMenuCommand>();
             services.AddScoped<TurnipMarketHosterCommand>();
+            services.AddScoped<TurnipMarketVisitorCommand>();
+            services.AddScoped<TurnipMarketFinderCommand>();
 
             // Hack for webhook activation of IBotService on startup
             services.AddHostedService<ActivatorService>();

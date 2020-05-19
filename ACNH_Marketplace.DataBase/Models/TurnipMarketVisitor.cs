@@ -25,6 +25,11 @@ namespace ACNH_Marketplace.DataBase.Models
         public string Description { get; set; }
 
         /// <summary>
+        /// Gets or sets hosters lower bounds for turnip price.
+        /// </summary>
+        public int PriceLowerBound { get; set; }
+
+        /// <summary>
         /// Gets or sets visitors <see cref="User"/> id.
         /// </summary>
         public Guid UserId { get; set; }

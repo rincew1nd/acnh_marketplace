@@ -37,7 +37,7 @@ namespace ACNH_Marketplace.DataBase.Models
         /// <summary>
         /// Gets or sets turnips market price.
         /// </summary>
-        public int TurnipPrice { get; set; }
+        public int Price { get; set; }
 
         /// <summary>
         /// Gets or sets hosters <see cref="User"/> id.

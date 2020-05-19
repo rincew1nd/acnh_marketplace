@@ -5,6 +5,7 @@
 namespace ACNH_Marketplace.Telegram.Services.BotService
 {
     using System;
+    using System.Linq;
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
@@ -126,7 +127,8 @@ namespace ACNH_Marketplace.Telegram.Services.BotService
 
         private Task HandleErrorAsync(Exception ex, CancellationToken ct)
         {
-            throw new NotImplementedException();
+            this.logger.LogError(ex, "Error");
+            return Task.CompletedTask;
         }
     }
 }

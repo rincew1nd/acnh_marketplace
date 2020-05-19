@@ -48,5 +48,10 @@ namespace ACNH_Marketplace.Telegram.Enums
         /// Turnip market Visitor menu.
         /// </summary>
         TurnipMarketVisitor,
+
+        /// <summary>
+        /// Find turnip markets or visitors.
+        /// </summary>
+        TurnipMarketFinder,
     }
 }

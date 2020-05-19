@@ -4,6 +4,7 @@ using ACNH_Marketplace.DataBase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace ACNH_Marketplace.DataBase.Migrations
 {
@@ -14,29 +15,30 @@ namespace ACNH_Marketplace.DataBase.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 .HasAnnotation("ProductVersion", "3.1.3")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("ACNH_Marketplace.DataBase.Models.EntryFee", b =>
                 {
-                    b.Property<byte[]>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("varbinary(16)");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Count")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
                     b.Property<int>("FeeType")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    b.Property<byte[]>("TurnipMarketHosterId")
-                        .HasColumnType("varbinary(16)");
+                    b.Property<Guid?>("TurnipMarketHosterId")
+                        .HasColumnType("uuid");
 
-                    b.Property<byte[]>("TurnipMarketVisitorId")
-                        .HasColumnType("varbinary(16)");
+                    b.Property<Guid?>("TurnipMarketVisitorId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -49,25 +51,24 @@ namespace ACNH_Marketplace.DataBase.Migrations
 
             modelBuilder.Entity("ACNH_Marketplace.DataBase.Models.TurnipMarketHoster", b =>
                 {
-                    b.Property<byte[]>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("varbinary(16)");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("BeginingDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("ExpirationDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<int>("TurnipPrice")
-                        .HasColumnType("int");
+                    b.Property<int>("Price")
+                        .HasColumnType("integer");
 
-                    b.Property<byte[]>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -78,29 +79,32 @@ namespace ACNH_Marketplace.DataBase.Migrations
 
             modelBuilder.Entity("ACNH_Marketplace.DataBase.Models.TurnipMarketVisitor", b =>
                 {
-                    b.Property<byte[]>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("varbinary(16)");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<byte[]>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)");
+                    b.Property<int>("PriceLowerBound")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("TurnipMarketVisitors");
                 });
 
             modelBuilder.Entity("ACNH_Marketplace.DataBase.Models.User", b =>
                 {
-                    b.Property<byte[]>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("varbinary(16)");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("InGameName")
                         .HasColumnType("text");
@@ -109,13 +113,13 @@ namespace ACNH_Marketplace.DataBase.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("LastActiveDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("TelegramId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Timezone")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -124,19 +128,18 @@ namespace ACNH_Marketplace.DataBase.Migrations
 
             modelBuilder.Entity("ACNH_Marketplace.DataBase.Models.UserContact", b =>
                 {
-                    b.Property<byte[]>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("varbinary(16)");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Contact")
                         .HasColumnType("text");
 
                     b.Property<int>("Type")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    b.Property<byte[]>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -147,26 +150,24 @@ namespace ACNH_Marketplace.DataBase.Migrations
 
             modelBuilder.Entity("ACNH_Marketplace.DataBase.Models.UserReview", b =>
                 {
-                    b.Property<byte[]>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("varbinary(16)");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
                     b.Property<int>("Rating")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    b.Property<byte[]>("ReviewedId")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)");
+                    b.Property<Guid>("ReviewedId")
+                        .HasColumnType("uuid");
 
-                    b.Property<byte[]>("ReviewerId")
-                        .IsRequired()
-                        .HasColumnType("varbinary(16)");
+                    b.Property<Guid>("ReviewerId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Type")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -200,8 +201,8 @@ namespace ACNH_Marketplace.DataBase.Migrations
             modelBuilder.Entity("ACNH_Marketplace.DataBase.Models.TurnipMarketVisitor", b =>
                 {
                     b.HasOne("ACNH_Marketplace.DataBase.Models.User", "User")
-                        .WithMany("Visits")
-                        .HasForeignKey("UserId")
+                        .WithOne("Visits")
+                        .HasForeignKey("ACNH_Marketplace.DataBase.Models.TurnipMarketVisitor", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

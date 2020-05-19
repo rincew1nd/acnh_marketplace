@@ -31,7 +31,7 @@ namespace ACNH_Marketplace.Web
             string connectionString = configuration.GetConnectionString("EFDesignerDatabase");
 
             var builder = new DbContextOptionsBuilder<MarketplaceContext>();
-            builder.UseMySQL(connectionString);
+            builder.UseNpgsql(connectionString);
 
             return new MarketplaceContext(builder.Options);
         }
