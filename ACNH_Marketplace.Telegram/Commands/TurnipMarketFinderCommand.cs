@@ -6,6 +6,7 @@ namespace ACNH_Marketplace.Telegram.Commands
 {
     using System;
     using System.Linq;
+    using System.Reflection.Metadata.Ecma335;
     using System.Text;
     using System.Threading.Tasks;
     using ACNH_Marketplace.DataBase;
@@ -40,7 +41,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             this.Update = update;
             update.UserContext.SetContext(UserContextEnum.UserState, UserStateEnum.TurnipMarketFinder);
 
-            var backToTMMM = false;
+            var backToTMMM = true;
             if (this.Update.Command.StartsWith("/FindHoster"))
             {
                 backToTMMM = await this.FindHoster();
@@ -63,9 +64,6 @@ namespace ACNH_Marketplace.Telegram.Commands
                 return OperationExecutionResult.Success;
             }
 
-            this.Update.UserContext.RemoveContext("HosterId");
-            this.Update.UserContext.RemoveContext("VisitorId");
-            update.UserContext.SetContext(UserContextEnum.UserState, UserStateEnum.TurnipMarket);
             this.Update.Command = "/BackTMMM";
             return OperationExecutionResult.Reroute;
         }
@@ -74,24 +72,18 @@ namespace ACNH_Marketplace.Telegram.Commands
         {
             int skip = default;
 
-            var commandParts = this.Update.Command.Split(' ');
-            if (commandParts.Count() < 2 || !Guid.TryParse(commandParts[1], out var visitorId))
+            var commandParts = this.Update.Command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (commandParts.Count() > 2)
             {
-                if (commandParts.Count() > 2)
-                {
-                    int.TryParse(commandParts[2], out skip);
-                }
-
-                return true;
+                int.TryParse(commandParts[2], out skip);
             }
 
-            this.Update.UserContext.SetContext("VisitorId", visitorId);
+            var visitorId = this.Update.UserContext.GetContext<Guid>("TMVId");
 
             var tmv = await this.Context.TurnipMarketVisitors.FindAsync(visitorId);
 
             var tmh = this.Context.TurnipMarketHosters
                 .Include(tmh => tmh.User)
-                .Include(tmh => tmh.Fee)
                 .Where(tmh => tmh.User.LastActiveDate > DateTime.Now.AddHours(-2) &&
                               tmh.BeginingDate > DateTime.Now &&
                               tmh.ExpirationDate < DateTime.Now &&
@@ -111,15 +103,15 @@ namespace ACNH_Marketplace.Telegram.Commands
 
             if (keyboard.Count >= 10)
             {
-                keyboard.Append(new[] { new Tuple<string, string>($"/FindHoster {visitorId} {skip + 10}", "Next page >>") });
+                keyboard.Add(new[] { new Tuple<string, string>($"/FindHoster {skip + 10}", "Next page >>") });
             }
 
             if (skip > 0)
             {
-                keyboard.Append(new[] { new Tuple<string, string>($"/FindHoster {visitorId} {skip - 10}", "<< Previous page") });
+                keyboard.Add(new[] { new Tuple<string, string>($"/FindHoster {skip - 10}", "<< Previous page") });
             }
 
-            keyboard.Append(new[] { new Tuple<string, string>("/BackTMMM", "<- Back") });
+            keyboard.Add(new[] { new Tuple<string, string>("/BackToVisitor", "<- Back") });
 
             await this.Client.EditMessageAsync(
                 this.Update.UserContext.TelegramId,
@@ -134,24 +126,18 @@ namespace ACNH_Marketplace.Telegram.Commands
         {
             int skip = default;
 
-            var commandParts = this.Update.Command.Split(' ');
-            if (commandParts.Count() < 2 || !Guid.TryParse(commandParts[1], out var hosterId))
+            var commandParts = this.Update.Command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (commandParts.Count() > 2)
             {
-                if (commandParts.Count() > 2)
-                {
-                    int.TryParse(commandParts[2], out skip);
-                }
-
-                return true;
+                int.TryParse(commandParts[2], out skip);
             }
 
-            this.Update.UserContext.SetContext("HosterId", hosterId);
+            var hosterId = this.Update.UserContext.GetContext<Guid>("TMHId");
 
             var tmh = await this.Context.TurnipMarketHosters.FindAsync(hosterId);
 
             var tmv = this.Context.TurnipMarketVisitors
                 .Include(tmv => tmv.User)
-                .Include(tmv => tmv.Fee)
                 .Where(tmv => tmv.User.LastActiveDate > DateTime.Now.AddHours(-2) &&
                               tmv.PriceLowerBound < tmh.Price &&
                               tmv.UserId != this.Update.UserContext.UserId)
@@ -169,15 +155,15 @@ namespace ACNH_Marketplace.Telegram.Commands
 
             if (keyboard.Count >= 10)
             {
-                keyboard.Append(new[] { new Tuple<string, string>($"/FindVisitor {hosterId} {skip + 10}", "Next page >>") });
+                keyboard.Add(new[] { new Tuple<string, string>($"/FindVisitor {skip + 10}", "Next page >>") });
             }
 
             if (skip > 0)
             {
-                keyboard.Append(new[] { new Tuple<string, string>($"/FindVisitor {hosterId} {skip - 10}", "<< Previous page") });
+                keyboard.Add(new[] { new Tuple<string, string>($"/FindVisitor {skip - 10}", "<< Previous page") });
             }
 
-            keyboard.Append(new[] { new Tuple<string, string>("/BackTMMM", "<- Back") });
+            keyboard.Add(new[] { new Tuple<string, string>("/BackToHoster", "<- Back") });
 
             await this.Client.EditMessageAsync(
                 this.Update.UserContext.TelegramId,
@@ -196,10 +182,11 @@ namespace ACNH_Marketplace.Telegram.Commands
                 return true;
             }
 
-            var id = this.Update.UserContext.GetContext<Guid>("HosterId");
+            var id = this.Update.UserContext.GetContext<Guid>("TMVId");
 
             var tmh = await this.Context.TurnipMarketHosters
                 .Include(tmh => tmh.User)
+                .Include(tmh => tmh.User.UserContacts)
                 .Include(tmh => tmh.Fee)
                 .FirstOrDefaultAsync(tmh => tmh.Id == hosterId);
 
@@ -209,6 +196,11 @@ namespace ACNH_Marketplace.Telegram.Commands
             sb.AppendLine($"Expires - {DateTimeConverter.ToUserDate(tmh.ExpirationDate, this.Update.UserContext.Timezone)}");
             sb.AppendLine($"Turnip price - {tmh.Price}");
             sb.AppendLine($"Description - {tmh.Description}");
+            sb.AppendLine($"Entry fee:");
+            foreach (var fee in tmh.Fee)
+            {
+                sb.AppendLine($"\t\t{fee.FeeType.GetDescription()} {fee.Count} ({fee.Description})");
+            }
 
             await this.Client.EditMessageAsync(
                 this.Update.UserContext.TelegramId,
@@ -228,10 +220,11 @@ namespace ACNH_Marketplace.Telegram.Commands
                 return true;
             }
 
-            var id = this.Update.UserContext.GetContext<Guid>("VisitorId");
+            var id = this.Update.UserContext.GetContext<Guid>("TMHId");
 
             var tmv = await this.Context.TurnipMarketVisitors
                 .Include(tmv => tmv.User)
+                .Include(tmh => tmh.User.UserContacts)
                 .Include(tmh => tmh.Fee)
                 .FirstOrDefaultAsync(tmv => tmv.Id == visitorId);
 
@@ -239,6 +232,11 @@ namespace ACNH_Marketplace.Telegram.Commands
             sb.AppendLine(this.GetUserInfo(tmv.User));
             sb.AppendLine($"Description - {tmv.Description}");
             sb.AppendLine($"Price lower bound - {tmv.PriceLowerBound}");
+            sb.AppendLine($"Entry fee:");
+            foreach (var fee in tmv.Fee)
+            {
+                sb.AppendLine($"\t\t{fee.FeeType.GetDescription()} {fee.Count} ({fee.Description})");
+            }
 
             await this.Client.EditMessageAsync(
                 this.Update.UserContext.TelegramId,

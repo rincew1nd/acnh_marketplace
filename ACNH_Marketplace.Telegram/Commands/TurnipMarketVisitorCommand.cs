@@ -11,6 +11,7 @@ namespace ACNH_Marketplace.Telegram.Commands
     using ACNH_Marketplace.DataBase.Models;
     using ACNH_Marketplace.Telegram.Commands.CommandBase;
     using ACNH_Marketplace.Telegram.Enums;
+    using ACNH_Marketplace.Telegram.Helpers;
     using ACNH_Marketplace.Telegram.Services.BotService;
     using global::Telegram.Bot.Types.ReplyMarkups;
     using Microsoft.EntityFrameworkCore;
@@ -64,6 +65,7 @@ namespace ACNH_Marketplace.Telegram.Commands
         private async Task ManageTMV()
         {
             var tmv = await this.Context.TurnipMarketVisitors
+                .Include(tmv => tmv.Fee)
                 .FirstOrDefaultAsync(tmh => tmh.UserId == this.Update.UserContext.UserId);
 
             if (tmv == null)
@@ -84,6 +86,12 @@ namespace ACNH_Marketplace.Telegram.Commands
             var sb = new StringBuilder();
             sb.AppendLine($"Description - {tmv.Description}");
             sb.AppendLine($"Price lower bound - {tmv.PriceLowerBound}");
+            sb.AppendLine($"Entry fee:");
+            foreach (var fee in tmv.Fee)
+            {
+                sb.AppendLine($"\t\t{fee.FeeType.GetDescription()} {fee.Count} ({fee.Description})");
+            }
+
             sb.AppendLine($"\nWhat do you wish to change?");
 
             this.Update.UserContext.SetContext("TMVId", tmv.Id);

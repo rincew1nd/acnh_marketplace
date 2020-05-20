@@ -66,6 +66,7 @@ namespace ACNH_Marketplace.Web
             services.AddScoped<TurnipMarketHosterCommand>();
             services.AddScoped<TurnipMarketVisitorCommand>();
             services.AddScoped<TurnipMarketFinderCommand>();
+            services.AddScoped<TurnipMarketEntryFeeCommand>();
 
             // Hack for webhook activation of IBotService on startup
             services.AddHostedService<ActivatorService>();

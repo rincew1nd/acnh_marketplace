@@ -19,6 +19,7 @@ namespace ACNH_Marketplace.Telegram.Commands
     using ACNH_Marketplace.Telegram.Services.BotService;
     using global::Telegram.Bot.Types.ReplyMarkups;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
     /// <summary>
     /// Turnip market hoster operations.
@@ -74,14 +75,26 @@ namespace ACNH_Marketplace.Telegram.Commands
         #region Operations
         private async Task ManageTMH()
         {
+            if (this.Update.Command == "/BackManageTMH")
+            {
+                this.Update.UserContext.RemoveContext("TMHId");
+            }
+
             var commandParts = this.Update.Command.Split(" ");
             if (commandParts.Length > 1)
             {
-                if (Guid.TryParse(commandParts[1], out var tmhId))
+                if (Guid.TryParse(commandParts[1], out var tmhId_))
                 {
-                    await this.ManageTMH(tmhId);
+                    await this.ManageTMH(tmhId_);
                     return;
                 }
+            }
+
+            var tmhId = this.Update.UserContext.GetContext<Guid?>("TMHId");
+            if (tmhId.HasValue)
+            {
+                await this.ManageTMH(tmhId.Value);
+                return;
             }
 
             var tmh = this.Context.TurnipMarketHosters
@@ -117,6 +130,7 @@ namespace ACNH_Marketplace.Telegram.Commands
         private async Task ManageTMH(Guid id)
         {
             var tmh = await this.Context.TurnipMarketHosters
+                .Include(tmh => tmh.Fee)
                 .FirstOrDefaultAsync(tmh => tmh.Id == id);
 
             if (tmh == null)
@@ -130,6 +144,12 @@ namespace ACNH_Marketplace.Telegram.Commands
             sb.AppendLine($"Expires - {DateTimeConverter.ToUserDate(tmh.ExpirationDate, this.Update.UserContext.Timezone)}");
             sb.AppendLine($"Turnip price - {tmh.Price}");
             sb.AppendLine($"Description - {tmh.Description}");
+            sb.AppendLine($"Entry fee:");
+            foreach (var fee in tmh.Fee)
+            {
+                sb.AppendLine($"\t\t{fee.FeeType.GetDescription()} {fee.Count} ({fee.Description})");
+            }
+
             sb.AppendLine($"\nWhat do you wish to change?");
 
             this.Update.UserContext.SetContext("TMHId", id);
@@ -149,10 +169,14 @@ namespace ACNH_Marketplace.Telegram.Commands
                         new[]
                         {
                             new InlineKeyboardButton() { CallbackData = "/ChangeDescription", Text = "Change description" },
-                            new InlineKeyboardButton() { CallbackData = "/HosterCode", Text = "Get market code" },
+                            new InlineKeyboardButton() { CallbackData = "/ChangeEntryFee", Text = "Change entry fee" },
                         },
-                        new[] { new InlineKeyboardButton() { CallbackData = $"/FindVisitor {tmh.Id}", Text = "Find visitors" } },
-                        new[] { new InlineKeyboardButton() { CallbackData = "/ManageTMH", Text = "<- Back" } },
+                        new[]
+                        {
+                            new InlineKeyboardButton() { CallbackData = $"/FindVisitor {tmh.Id}", Text = "Find visitors" },
+                            new InlineKeyboardButton() { CallbackData = "/HosterCode", Text = "Get hoster code" },
+                        },
+                        new[] { new InlineKeyboardButton() { CallbackData = "/BackManageTMH", Text = "<- Back" } },
                     }));
         }
 

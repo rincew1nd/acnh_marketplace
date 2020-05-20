@@ -53,5 +53,10 @@ namespace ACNH_Marketplace.Telegram.Enums
         /// Find turnip markets or visitors.
         /// </summary>
         TurnipMarketFinder,
+
+        /// <summary>
+        /// Entry fee manager for entities.
+        /// </summary>
+        TurnipMarketEntryFee,
     }
 }

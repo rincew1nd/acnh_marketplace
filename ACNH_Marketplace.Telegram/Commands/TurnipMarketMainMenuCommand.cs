@@ -30,6 +30,8 @@ namespace ACNH_Marketplace.Telegram.Commands
         public override async Task<OperationExecutionResult> Execute(PersonifiedUpdate update)
         {
             update.UserContext.SetContext(UserContextEnum.UserState, UserStateEnum.TurnipMarket);
+            update.UserContext.RemoveContext("TMHId");
+            update.UserContext.RemoveContext("TMVId");
 
             await this.Client.EditMessageAsync(
                 update.UserContext.TelegramId,

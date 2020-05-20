@@ -62,6 +62,10 @@
         "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketFinderCommand"
       },
       {
+        "Pattern": "/ChangeEntryFee",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketEntryFeeCommand"
+      },
+      {
         "Pattern": ".*",
         "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketHosterCommand"
       }
@@ -76,14 +80,48 @@
         "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketFinderCommand"
       },
       {
+        "Pattern": "/ChangeEntryFee",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketEntryFeeCommand"
+      },
+      {
         "Pattern": ".*",
         "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketVisitorCommand"
       }
     ],
     "TurnipMarketFinder": [
       {
+        "Pattern": "/BackTMMM",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketMainMenuCommand"
+      },
+      {
+        "Pattern": "/BackToHoster",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketHosterCommand"
+      },
+      {
+        "Pattern": "/BackToVisitor",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketVisitorCommand"
+      },
+      {
         "Pattern": ".*",
         "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketFinderCommand"
+      }
+    ],
+    "TurnipMarketEntryFee": [
+      {
+        "Pattern": "/BackTMMM",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketMainMenuCommand"
+      },
+      {
+        "Pattern": "/BackToHoster",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketHosterCommand"
+      },
+      {
+        "Pattern": "/BackToVisitor",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketVisitorCommand"
+      },
+      {
+        "Pattern": ".*",
+        "Type": "ACNH_Marketplace.Telegram.Commands.TurnipMarketEntryFeeCommand"
       }
     ]
   }
