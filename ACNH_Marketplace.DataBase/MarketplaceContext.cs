@@ -49,15 +49,28 @@ namespace ACNH_Marketplace.DataBase
         /// <summary>
         /// Gets or sets island entry fee collection.
         /// </summary>
-        public DbSet<EntryFee> EntryFees { get; set; }
+        public DbSet<TurnipMarketEntryFee> TurnipMarketEntryFees { get; set; }
+
+        /// <summary>
+        /// Gets or sets user report collection.
+        /// </summary>
+        public DbSet<UserReport> UserReports { get; set; }
 
         /// <inheritdoc/>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<UserContact>()
+                .HasOne(uc => uc.User)
+                .WithMany(u => u.UserContacts)
+                .HasForeignKey(ur => ur.UserId);
+
             modelBuilder.Entity<UserReview>()
                 .HasOne(ur => ur.Reviewed)
                 .WithMany(u => u.UserReviews)
                 .HasForeignKey(ur => ur.ReviewedId);
+
+            modelBuilder.Entity<UserReport>()
+                .HasKey(ur => new { ur.OperationType, ur.OperationId });
         }
     }
 }

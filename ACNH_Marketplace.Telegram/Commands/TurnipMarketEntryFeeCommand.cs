@@ -68,6 +68,13 @@ namespace ACNH_Marketplace.Telegram.Commands
                     await this.EditTMEF();
                     return OperationExecutionResult.Success;
                 }
+
+                if (update.Command.StartsWith("/Delete"))
+                {
+                    await this.DeleteEntryFee();
+                    await this.ManageTMEF();
+                    return OperationExecutionResult.Success;
+                }
             }
             catch (Exception ex)
             {
@@ -86,6 +93,8 @@ namespace ACNH_Marketplace.Telegram.Commands
         #region Operations
         private async Task ManageTMEF()
         {
+            this.Update.UserContext.RemoveContext("EntryFee_Id");
+
             var commandParts = this.Update.Command.Split(' ');
             if (commandParts.Length > 1 && Guid.TryParse(commandParts[1], out var efId))
             {
@@ -93,8 +102,8 @@ namespace ACNH_Marketplace.Telegram.Commands
                 return;
             }
 
-            var tmhId = this.Update.UserContext.GetContext<Guid>("TMHId");
-            var tmvId = this.Update.UserContext.GetContext<Guid>("TMVId");
+            var tmhId = this.Update.UserContext.GetContext<Guid?>("TMHId");
+            var tmvId = this.Update.UserContext.GetContext<Guid?>("TMVId");
 
             var operationType = tmhId == default ? tmvId == default ?
                 FeeOperationEnum.UnknownFee : FeeOperationEnum.VisitorEntryFee : FeeOperationEnum.HosterEntryFee;
@@ -103,17 +112,14 @@ namespace ACNH_Marketplace.Telegram.Commands
                 throw new ArgumentException();
             }
 
-            this.Update.UserContext.SetContext("EntryFee_OperationType", operationType);
+            if (!tmvId.HasValue && !tmhId.HasValue)
+            {
+                return;
+            }
 
-            IQueryable<EntryFee> efs = null;
-            if (operationType == FeeOperationEnum.HosterEntryFee)
-            {
-                efs = this.Context.EntryFees.Where(ef => ef.TurnipMarketHosterId == tmhId);
-            }
-            else
-            {
-                efs = this.Context.EntryFees.Where(ef => ef.TurnipMarketVisitorId == tmvId);
-            }
+            IQueryable<TurnipMarketEntryFee> efs = this.Context.TurnipMarketEntryFees
+                    .Where(ef => ef.TurnipMarketHosterId == tmhId ||
+                                 ef.TurnipMarketVisitorId == tmvId);
 
             var keyboard = new List<Tuple<string, string>[]>();
             foreach (var ef in efs)
@@ -144,7 +150,7 @@ namespace ACNH_Marketplace.Telegram.Commands
 
         private async Task ManageTMEF(Guid efId)
         {
-            var ef = await this.Context.EntryFees.FindAsync(efId);
+            var ef = await this.Context.TurnipMarketEntryFees.FindAsync(efId);
 
             if (ef == null)
             {
@@ -163,6 +169,7 @@ namespace ACNH_Marketplace.Telegram.Commands
                 new Tuple<string, string>[]
                 {
                     new Tuple<string, string>($"/ChangeDescription", "Change description"),
+                    new Tuple<string, string>($"/DeleteEF", "Delete record"),
                 },
                 new Tuple<string, string>[] { new Tuple<string, string>($"/ManageTMEF", "<- Back") },
             };
@@ -300,15 +307,17 @@ namespace ACNH_Marketplace.Telegram.Commands
 
         private async Task EnteringCount()
         {
-            await this.Client.SendMessageAsync(
+            await this.Client.EditMessageAsync(
                 this.Update.UserContext.TelegramId,
+                this.Update.MessageId,
                 "Enter fee count (positive integer number):");
         }
 
         private async Task EnteringDescription()
         {
-            await this.Client.SendMessageAsync(
+            await this.Client.EditMessageAsync(
                 this.Update.UserContext.TelegramId,
+                this.Update.MessageId,
                 "Enter fee description:");
         }
         #endregion
@@ -351,35 +360,27 @@ namespace ACNH_Marketplace.Telegram.Commands
         #region Update database
         private async Task<Guid> UpdateEntryFee()
         {
-            var efId = this.Update.UserContext.GetContext<Guid>("EntryFee_Id");
+            var efId = this.Update.UserContext.GetContext<Guid?>("EntryFee_Id");
             var type = this.Update.UserContext.GetContext<FeeType?>("EntryFee_Type");
             var count = this.Update.UserContext.GetContext<int>("EntryFee_Count");
             var description = this.Update.UserContext.GetContext<string>("EntryFee_Description");
 
-            var ef = await this.Context.EntryFees
+            var ef = await this.Context.TurnipMarketEntryFees
                 .FirstOrDefaultAsync(ef => ef.Id == efId);
 
-            if (ef != null)
+            if (efId.HasValue && ef != null)
             {
                 ef.FeeType = type ?? ef.FeeType;
                 ef.Count = count == default ? ef.Count : count;
                 ef.Description = string.IsNullOrWhiteSpace(description) ? ef.Description : description;
                 this.Context.Update(ef);
             }
-
-            if (ef == null)
+            else
             {
                 var tmhId = this.Update.UserContext.GetContext<Guid?>("TMHId");
                 var tmvId = this.Update.UserContext.GetContext<Guid?>("TMVId");
 
-                var operationType = tmhId == default ? tmvId == default ?
-                    FeeOperationEnum.UnknownFee : FeeOperationEnum.VisitorEntryFee : FeeOperationEnum.HosterEntryFee;
-                if (operationType == FeeOperationEnum.UnknownFee)
-                {
-                    throw new ArgumentException();
-                }
-
-                ef = new EntryFee()
+                ef = new TurnipMarketEntryFee()
                 {
                     TurnipMarketHosterId = tmhId,
                     TurnipMarketVisitorId = tmvId,
@@ -387,6 +388,7 @@ namespace ACNH_Marketplace.Telegram.Commands
                     Count = count,
                     Description = description,
                 };
+
                 await this.Context.AddAsync(ef);
             }
 
@@ -398,6 +400,24 @@ namespace ACNH_Marketplace.Telegram.Commands
             this.Update.UserContext.RemoveContext("EntryFee_Description");
 
             return ef.Id;
+        }
+
+        private async Task DeleteEntryFee()
+        {
+            var efId = this.Update.UserContext.GetContext<Guid?>("EntryFee_Id");
+
+            if (efId.HasValue)
+            {
+                var ef = await this.Context.TurnipMarketEntryFees.FirstOrDefaultAsync(ef => ef.Id == efId);
+
+                if (ef != null)
+                {
+                    this.Context.TurnipMarketEntryFees.Remove(ef);
+                    await this.Context.SaveChangesAsync();
+                }
+            }
+
+            this.Update.UserContext.RemoveContext("EntryFee_Id");
         }
         #endregion
     }

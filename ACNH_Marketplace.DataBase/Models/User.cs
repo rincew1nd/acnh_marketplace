@@ -45,6 +45,11 @@ namespace ACNH_Marketplace.DataBase.Models
         public DateTime LastActiveDate { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether users is banned or not.
+        /// </summary>
+        public bool IsBanned { get; set; }
+
+        /// <summary>
         /// Gets or sets users reviews.
         /// </summary>
         public IList<UserReview> UserReviews { get; set; }
@@ -57,11 +62,16 @@ namespace ACNH_Marketplace.DataBase.Models
         /// <summary>
         /// Gets or sets <see cref="TurnipMarketVisitor">turnip market visit application</see> from user.
         /// </summary>
-        public TurnipMarketVisitor Visits { get; set; }
+        public TurnipMarketVisitor Visit { get; set; }
 
         /// <summary>
         /// Gets or sets user contacts.
         /// </summary>
         public IList<UserContact> UserContacts { get; set; }
+
+        /// <summary>
+        /// Gets or sets user reports.
+        /// </summary>
+        public IList<UserReport> UserReports { get; set; }
     }
 }

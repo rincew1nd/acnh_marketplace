@@ -43,7 +43,6 @@ namespace ACNH_Marketplace.Telegram.Commands
                         new[] { new InlineKeyboardButton() { CallbackData = "/ManageTMH", Text = "Manage hosted markets" } },
                         new[] { new InlineKeyboardButton() { CallbackData = "/CreateTMH", Text = "Crate hosted market" } },
                         new[] { new InlineKeyboardButton() { CallbackData = "/ManageTMV", Text = "Manage visit applications" } },
-                        new[] { new InlineKeyboardButton() { CallbackData = "/CreateTMV", Text = "Create visit application" } },
                         new[] { new InlineKeyboardButton() { CallbackData = "/BackMainMenu", Text = "<- Back" } },
                     }));
 

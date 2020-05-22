@@ -57,7 +57,7 @@ namespace ACNH_Marketplace.Telegram.Commands
                         update.UserContext.SetContext(UserContextEnum.UserState, UserStateEnum.MainPage);
                         return OperationExecutionResult.Reroute;
                     }
-                    else if (update.Command.StartsWith("/Change"))
+                    else if (update.Command.StartsWith("/Change") || update.Command.StartsWith("/Delete"))
                     {
                         await this.ProfileEdit();
                     }
@@ -148,6 +148,34 @@ namespace ACNH_Marketplace.Telegram.Commands
                 return;
             }
 
+            if (this.Update.Command.StartsWith("/Delete"))
+            {
+                var contactType = UserContactType.Unknown;
+                switch (this.Update.Command)
+                {
+                    case "/DeleteReddit":
+                        contactType = UserContactType.Reddit;
+                        break;
+                    case "/DeleteTwitter":
+                        contactType = UserContactType.Twitter;
+                        break;
+                    case "/DeleteFacebook":
+                        contactType = UserContactType.Facebook;
+                        break;
+                    case "/DeleteDiscord":
+                        contactType = UserContactType.Discord;
+                        break;
+                    default:
+                        break;
+                }
+
+                if (contactType != UserContactType.Unknown)
+                {
+                    await this.DeleteContact(contactType);
+                    await this.ProfileMain();
+                }
+            }
+
             switch (this.Update.UserContext.GetContext<int>("ProfileEditType"))
             {
                 case 1:
@@ -189,12 +217,22 @@ namespace ACNH_Marketplace.Telegram.Commands
                         new[]
                         {
                             new InlineKeyboardButton() { CallbackData = "/ChangeReddit", Text = "Change Reddit" },
+                            new InlineKeyboardButton() { CallbackData = "/DeleteReddit", Text = "Delete Reddit" },
+                        },
+                        new[]
+                        {
                             new InlineKeyboardButton() { CallbackData = "/ChangeDiscord", Text = "Change Discord" },
+                            new InlineKeyboardButton() { CallbackData = "/DeleteDiscord", Text = "Delete Discord" },
                         },
                         new[]
                         {
                             new InlineKeyboardButton() { CallbackData = "/ChangeTwitter", Text = "Change Twitter" },
+                            new InlineKeyboardButton() { CallbackData = "/DeleteTwitter", Text = "Delete Twitter" },
+                        },
+                        new[]
+                        {
                             new InlineKeyboardButton() { CallbackData = "/ChangeFacebook", Text = "Change Facebook" },
+                            new InlineKeyboardButton() { CallbackData = "/DeleteFacebook", Text = "Delete Facebook" },
                         },
                         new[] { new InlineKeyboardButton() { CallbackData = "/ProfileMain", Text = "<- Back" } },
                     }));
@@ -240,7 +278,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             await this.Client.EditMessageAsync(
                 this.Update.UserContext.TelegramId,
                 this.Update.MessageId,
-                "Please enter in game name (IGN):");
+                "Enter in game name (IGN):");
             this.Update.UserContext.SetContext("RegistrationState", 1);
         }
 
@@ -249,7 +287,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             await this.Client.EditMessageAsync(
                 this.Update.UserContext.TelegramId,
                 this.Update.MessageId,
-                "Please enter island name:");
+                "Enter island name:");
             this.Update.UserContext.SetContext("RegistrationState", 2);
         }
 
@@ -258,7 +296,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             await this.Client.EditMessageAsync(
                 this.Update.UserContext.TelegramId,
                 this.Update.MessageId,
-                "Please enter timezone (from -14 to 14):");
+                "Enter timezone (from -14 to 14):");
             this.Update.UserContext.SetContext("RegistrationState", 3);
         }
 
@@ -430,10 +468,7 @@ namespace ACNH_Marketplace.Telegram.Commands
                     user.IslandName = island;
                 }
 
-                if (timezone != 0)
-                {
-                    user.Timezone = timezone;
-                }
+                user.Timezone = timezone;
 
                 this.Context.Update(user);
             }
@@ -441,6 +476,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             await this.Context.SaveChangesAsync();
 
             this.Update.UserContext.RemoveContext("ProfileEditType");
+            this.Update.UserContext.UserId = user.Id;
 
             await this.ProfileMain();
         }
@@ -476,6 +512,19 @@ namespace ACNH_Marketplace.Telegram.Commands
             this.Update.UserContext.RemoveContext("ProfileEditType");
 
             await this.ProfileMain();
+        }
+
+        private async Task DeleteContact(UserContactType contactType)
+        {
+            var userContacts = await this.Context.UserContacts
+                .FirstOrDefaultAsync(uc => uc.UserId == this.Update.UserContext.UserId &&
+                             uc.Type == contactType);
+
+            if (userContacts != null)
+            {
+                this.Context.UserContacts.Remove(userContacts);
+                await this.Context.SaveChangesAsync();
+            }
         }
         #endregion
     }

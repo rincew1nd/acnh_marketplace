@@ -28,5 +28,10 @@ namespace ACNH_Marketplace.DataBase.Enums
         /// Facebook username.
         /// </summary>
         Facebook,
+
+        /// <summary>
+        /// Unknown contact type.
+        /// </summary>
+        Unknown,
     }
 }

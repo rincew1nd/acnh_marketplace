@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ACNH_Marketplace.DataBase.Migrations
 {
-    public partial class VisitorAndHosterNamingUpdate : Migration
+    /// <inheritdoc/>
+    public partial class Initial_migration : Migration
     {
         /// <inheritdoc/>
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,8 +33,8 @@ namespace ACNH_Marketplace.DataBase.Migrations
                     Id = table.Column<Guid>(nullable: false),
                     BeginingDate = table.Column<DateTime>(nullable: false),
                     ExpirationDate = table.Column<DateTime>(nullable: false),
-                    Description = table.Column<string>(nullable: true),
                     Price = table.Column<int>(nullable: false),
+                    Description = table.Column<string>(nullable: true),
                     UserId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
@@ -52,8 +53,8 @@ namespace ACNH_Marketplace.DataBase.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    Description = table.Column<string>(nullable: true),
                     PriceLowerBound = table.Column<int>(nullable: false),
+                    Description = table.Column<string>(nullable: true),
                     UserId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
@@ -81,6 +82,26 @@ namespace ACNH_Marketplace.DataBase.Migrations
                     table.PrimaryKey("PK_UserContacts", x => x.Id);
                     table.ForeignKey(
                         name: "FK_UserContacts_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserReports",
+                columns: table => new
+                {
+                    OperationType = table.Column<int>(nullable: false),
+                    OperationId = table.Column<Guid>(nullable: false),
+                    Id = table.Column<Guid>(nullable: false),
+                    UserId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserReports", x => new { x.OperationType, x.OperationId });
+                    table.ForeignKey(
+                        name: "FK_UserReports_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -116,7 +137,7 @@ namespace ACNH_Marketplace.DataBase.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "EntryFees",
+                name: "TurnipMarketEntryFees",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
@@ -128,15 +149,15 @@ namespace ACNH_Marketplace.DataBase.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_EntryFees", x => x.Id);
+                    table.PrimaryKey("PK_TurnipMarketEntryFees", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_EntryFees_TurnipMarketHosters_TurnipMarketHosterId",
+                        name: "FK_TurnipMarketEntryFees_TurnipMarketHosters_TurnipMarketHoste~",
                         column: x => x.TurnipMarketHosterId,
                         principalTable: "TurnipMarketHosters",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_EntryFees_TurnipMarketVisitors_TurnipMarketVisitorId",
+                        name: "FK_TurnipMarketEntryFees_TurnipMarketVisitors_TurnipMarketVisi~",
                         column: x => x.TurnipMarketVisitorId,
                         principalTable: "TurnipMarketVisitors",
                         principalColumn: "Id",
@@ -144,13 +165,13 @@ namespace ACNH_Marketplace.DataBase.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_EntryFees_TurnipMarketHosterId",
-                table: "EntryFees",
+                name: "IX_TurnipMarketEntryFees_TurnipMarketHosterId",
+                table: "TurnipMarketEntryFees",
                 column: "TurnipMarketHosterId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EntryFees_TurnipMarketVisitorId",
-                table: "EntryFees",
+                name: "IX_TurnipMarketEntryFees_TurnipMarketVisitorId",
+                table: "TurnipMarketEntryFees",
                 column: "TurnipMarketVisitorId");
 
             migrationBuilder.CreateIndex(
@@ -170,6 +191,11 @@ namespace ACNH_Marketplace.DataBase.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserReports_UserId",
+                table: "UserReports",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserReviews_ReviewedId",
                 table: "UserReviews",
                 column: "ReviewedId");
@@ -184,10 +210,13 @@ namespace ACNH_Marketplace.DataBase.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "EntryFees");
+                name: "TurnipMarketEntryFees");
 
             migrationBuilder.DropTable(
                 name: "UserContacts");
+
+            migrationBuilder.DropTable(
+                name: "UserReports");
 
             migrationBuilder.DropTable(
                 name: "UserReviews");

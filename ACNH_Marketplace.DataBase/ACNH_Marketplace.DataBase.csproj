@@ -9,6 +9,16 @@
   <ItemGroup>
     <Compile Remove="Migrations\20200511181106_InitialCreate.cs" />
     <Compile Remove="Migrations\20200511181106_InitialCreate.Designer.cs" />
+    <Compile Remove="Migrations\20200520221726_UserReports.cs" />
+    <Compile Remove="Migrations\20200520221726_UserReports.Designer.cs" />
+    <Compile Remove="Migrations\20200521200816_EntryFeeProperIntegration.cs" />
+    <Compile Remove="Migrations\20200521200816_EntryFeeProperIntegration.Designer.cs" />
+    <Compile Remove="Migrations\20200521210612_HostersFix.cs" />
+    <Compile Remove="Migrations\20200521210612_HostersFix.Designer.cs" />
+    <Compile Remove="Migrations\20200521211123_Initial migration.cs" />
+    <Compile Remove="Migrations\20200521211123_Initial migration.Designer.cs" />
+    <Compile Remove="Migrations\20200521211346_Initial_migration.cs" />
+    <Compile Remove="Migrations\20200521211346_Initial_migration.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

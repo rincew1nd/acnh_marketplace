@@ -111,6 +111,12 @@ namespace ACNH_Marketplace.Telegram.Services.BotService
 
             var (userId, command, messageId) = UpdateHelpers.GetUserAndCommand(update);
             var user = await context.Users.FirstOrDefaultAsync(u => u.TelegramId == userId);
+
+            if (user != null && user.IsBanned)
+            {
+                return;
+            }
+
             var userContext = this.userContextService.GetUserContext(user, userId);
 
             PersonifiedUpdate personifiedUpdate = new PersonifiedUpdate()

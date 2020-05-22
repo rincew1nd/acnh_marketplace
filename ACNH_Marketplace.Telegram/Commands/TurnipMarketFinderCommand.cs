@@ -6,10 +6,12 @@ namespace ACNH_Marketplace.Telegram.Commands
 {
     using System;
     using System.Linq;
+    using System.Reflection.Emit;
     using System.Reflection.Metadata.Ecma335;
     using System.Text;
     using System.Threading.Tasks;
     using ACNH_Marketplace.DataBase;
+    using ACNH_Marketplace.DataBase.Enums;
     using ACNH_Marketplace.DataBase.Models;
     using ACNH_Marketplace.Telegram.Commands.CommandBase;
     using ACNH_Marketplace.Telegram.Enums;
@@ -58,6 +60,11 @@ namespace ACNH_Marketplace.Telegram.Commands
             {
                 backToTMMM = await this.ViewVisitorDescription();
             }
+            else if (this.Update.Command.StartsWith("/Report"))
+            {
+                await this.ReportEntry();
+                backToTMMM = false;
+            }
 
             if (!backToTMMM)
             {
@@ -85,8 +92,8 @@ namespace ACNH_Marketplace.Telegram.Commands
             var tmh = this.Context.TurnipMarketHosters
                 .Include(tmh => tmh.User)
                 .Where(tmh => tmh.User.LastActiveDate > DateTime.Now.AddHours(-2) &&
-                              tmh.BeginingDate > DateTime.Now &&
-                              tmh.ExpirationDate < DateTime.Now &&
+                              tmh.BeginingDate < DateTime.Now &&
+                              tmh.ExpirationDate > DateTime.Now &&
                               tmh.Price > tmv.PriceLowerBound &&
                               tmh.UserId != this.Update.UserContext.UserId)
                 .OrderByDescending(tmh => tmh.Price)
@@ -187,7 +194,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             var tmh = await this.Context.TurnipMarketHosters
                 .Include(tmh => tmh.User)
                 .Include(tmh => tmh.User.UserContacts)
-                .Include(tmh => tmh.Fee)
+                .Include(tmh => tmh.EntryFees)
                 .FirstOrDefaultAsync(tmh => tmh.Id == hosterId);
 
             var sb = new StringBuilder();
@@ -197,7 +204,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             sb.AppendLine($"Turnip price - {tmh.Price}");
             sb.AppendLine($"Description - {tmh.Description}");
             sb.AppendLine($"Entry fee:");
-            foreach (var fee in tmh.Fee)
+            foreach (var fee in tmh.EntryFees)
             {
                 sb.AppendLine($"\t\t{fee.FeeType.GetDescription()} {fee.Count} ({fee.Description})");
             }
@@ -207,7 +214,11 @@ namespace ACNH_Marketplace.Telegram.Commands
                 this.Update.MessageId,
                 sb.ToString(),
                 CommandHelper.BuildKeyboard(
-                    new[] { new[] { new Tuple<string, string>($"/FindHoster {id}", "<- Back") } }));
+                    new[]
+                    {
+                        new[] { new Tuple<string, string>($"/ReportHoster {hosterId}", "Report hosted market") },
+                        new[] { new Tuple<string, string>($"/FindHoster {id}", "<- Back") },
+                    }));
 
             return false;
         }
@@ -225,7 +236,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             var tmv = await this.Context.TurnipMarketVisitors
                 .Include(tmv => tmv.User)
                 .Include(tmh => tmh.User.UserContacts)
-                .Include(tmh => tmh.Fee)
+                .Include(tmh => tmh.EntryFees)
                 .FirstOrDefaultAsync(tmv => tmv.Id == visitorId);
 
             var sb = new StringBuilder();
@@ -233,7 +244,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             sb.AppendLine($"Description - {tmv.Description}");
             sb.AppendLine($"Price lower bound - {tmv.PriceLowerBound}");
             sb.AppendLine($"Entry fee:");
-            foreach (var fee in tmv.Fee)
+            foreach (var fee in tmv.EntryFees)
             {
                 sb.AppendLine($"\t\t{fee.FeeType.GetDescription()} {fee.Count} ({fee.Description})");
             }
@@ -243,7 +254,70 @@ namespace ACNH_Marketplace.Telegram.Commands
                 this.Update.MessageId,
                 sb.ToString(),
                 CommandHelper.BuildKeyboard(
-                    new[] { new[] { new Tuple<string, string>($"/FindVisitor {id}", "<- Back") } }));
+                    new[]
+                    {
+                        new[] { new Tuple<string, string>($"/ReportVisitor {visitorId}", "Report visitor application") },
+                        new[] { new Tuple<string, string>($"/FindVisitor {id}", "<- Back") },
+                    }));
+
+            return false;
+        }
+
+        private async Task<bool> ReportEntry()
+        {
+            var commandParts = this.Update.Command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (commandParts.Length != 2 ||
+                !Guid.TryParse(commandParts[1], out var operationId))
+            {
+                return true;
+            }
+
+            var operationType =
+                commandParts[0] != "/ReportHoster" ?
+                commandParts[0] != "/ReportVisitor" ?
+                OperationType.Unknown : OperationType.TurnipMarket_Visitor : OperationType.TurnipMarket_Hoster;
+
+            Guid? userId = null;
+            switch (operationType)
+            {
+                case OperationType.TurnipMarket_Hoster:
+                    userId = this.Context.TurnipMarketHosters.Find(operationId).UserId;
+                    break;
+                case OperationType.TurnipMarket_Visitor:
+                    userId = this.Context.TurnipMarketVisitors.Find(operationId).UserId;
+                    break;
+            }
+
+            if (!userId.HasValue || operationType == OperationType.Unknown)
+            {
+                return true;
+            }
+
+            var userReport = this.Context.UserReports.
+                FirstOrDefaultAsync(ur => ur.UserId == userId &&
+                                          ur.OperationType == operationType &&
+                                          ur.OperationId == operationId);
+            if (userReport == null)
+            {
+                var report = new UserReport()
+                {
+                    UserId = userId.Value,
+                    OperationType = operationType,
+                    OperationId = operationId,
+                };
+                this.Context.UserReports.Add(report);
+                await this.Context.SaveChangesAsync();
+
+                await this.Client.SendMessageAsync(
+                    this.Update.UserContext.TelegramId,
+                    "User reported");
+            }
+            else
+            {
+                await this.Client.SendMessageAsync(
+                    this.Update.UserContext.TelegramId,
+                    "User already reported");
+            }
 
             return false;
         }

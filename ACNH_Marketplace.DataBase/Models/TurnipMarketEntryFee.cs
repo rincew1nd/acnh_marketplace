@@ -1,4 +1,4 @@
-﻿// <copyright file="EntryFee.cs" company="Cattleya">
+﻿// <copyright file="TurnipMarketEntryFee.cs" company="Cattleya">
 // Copyright (c) Cattleya. All rights reserved.
 // </copyright>
 
@@ -6,13 +6,12 @@ namespace ACNH_Marketplace.DataBase.Models
 {
     using System;
     using System.ComponentModel.DataAnnotations;
-    using System.ComponentModel.DataAnnotations.Schema;
     using ACNH_Marketplace.DataBase.Enums;
 
     /// <summary>
     /// Island entering fee record.
     /// </summary>
-    public class EntryFee
+    public class TurnipMarketEntryFee
     {
         /// <summary>
         /// Gets or sets record primary key.
@@ -21,15 +20,13 @@ namespace ACNH_Marketplace.DataBase.Models
         public Guid Id { get; set; }
 
         /// <summary>
-        /// Gets or sets identifier of hoster.
+        /// Gets or sets turnip market hoster record id.
         /// </summary>
-        [ForeignKey("TurnipMarketHoster")]
         public Guid? TurnipMarketHosterId { get; set; }
 
         /// <summary>
-        /// Gets or sets identifier of visitor.
+        /// Gets or sets turnip market visitor record id.
         /// </summary>
-        [ForeignKey("TurnipMarketVisitor")]
         public Guid? TurnipMarketVisitorId { get; set; }
 
         /// <summary>

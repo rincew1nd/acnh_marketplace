@@ -47,6 +47,12 @@ namespace ACNH_Marketplace.Web.Controllers
         {
             var (userId, command, messageId) = UpdateHelpers.GetUserAndCommand(update);
             var user = await this.context.Users.FirstOrDefaultAsync(u => u.TelegramId == userId);
+
+            if (user != null && user.IsBanned)
+            {
+                return this.Ok();
+            }
+
             var userContext = this.userContextService.GetUserContext(user, userId);
 
             PersonifiedUpdate personifiedUpdate = new PersonifiedUpdate()

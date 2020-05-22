@@ -57,6 +57,11 @@ namespace ACNH_Marketplace.Telegram.Commands
                 return OperationExecutionResult.Success;
             }
 
+            if (update.Command.StartsWith("/DeleteTMV"))
+            {
+                await this.DeleteVisitor();
+            }
+
             await this.ManageTMV();
             return OperationExecutionResult.Success;
         }
@@ -65,7 +70,7 @@ namespace ACNH_Marketplace.Telegram.Commands
         private async Task ManageTMV()
         {
             var tmv = await this.Context.TurnipMarketVisitors
-                .Include(tmv => tmv.Fee)
+                .Include(tmv => tmv.EntryFees)
                 .FirstOrDefaultAsync(tmh => tmh.UserId == this.Update.UserContext.UserId);
 
             if (tmv == null)
@@ -87,7 +92,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             sb.AppendLine($"Description - {tmv.Description}");
             sb.AppendLine($"Price lower bound - {tmv.PriceLowerBound}");
             sb.AppendLine($"Entry fee:");
-            foreach (var fee in tmv.Fee)
+            foreach (var fee in tmv.EntryFees)
             {
                 sb.AppendLine($"\t\t{fee.FeeType.GetDescription()} {fee.Count} ({fee.Description})");
             }
@@ -108,8 +113,12 @@ namespace ACNH_Marketplace.Telegram.Commands
                             new InlineKeyboardButton() { CallbackData = "/ChangeDescription", Text = "Change description" },
                             new InlineKeyboardButton() { CallbackData = "/ChangeEntryFee", Text = "Change entry fee" },
                         },
-                        new[] { new InlineKeyboardButton() { CallbackData = "/ChangeLowerBound", Text = "Change price lower bound" } },
-                        new[] { new InlineKeyboardButton() { CallbackData = $"/FindHoster {tmv.Id}", Text = "Look for awailable hosters" } },
+                        new[]
+                        {
+                            new InlineKeyboardButton() { CallbackData = "/ChangeLowerBound", Text = "Change price lower bound" },
+                            new InlineKeyboardButton() { CallbackData = "/DeleteTMV", Text = "Delete record" },
+                        },
+                        new[] { new InlineKeyboardButton() { CallbackData = $"/FindHoster {tmv.Id}", Text = "Look for available hosters" } },
                         new[] { new InlineKeyboardButton() { CallbackData = "/BackTMMM", Text = "<- Back" } },
                     }));
         }
@@ -266,6 +275,25 @@ namespace ACNH_Marketplace.Telegram.Commands
             this.Update.UserContext.RemoveContext("TMVId");
             this.Update.UserContext.RemoveContext("VisitorPriceLowerBound");
             this.Update.UserContext.RemoveContext("VisitorDescription");
+        }
+
+        private async Task DeleteVisitor()
+        {
+            var tmvId = this.Update.UserContext.GetContext<Guid?>("TMVId");
+
+            if (tmvId.HasValue)
+            {
+                var tmv = await this.Context.TurnipMarketVisitors
+                    .Include(tmv => tmv.EntryFees)
+                    .FirstOrDefaultAsync(tmh => tmh.Id == tmvId && tmh.UserId == this.Update.UserContext.UserId);
+                if (tmv != null)
+                {
+                    this.Context.Remove(tmv);
+                    await this.Context.SaveChangesAsync();
+
+                    this.Update.UserContext.RemoveContext("TMVId");
+                }
+            }
         }
         #endregion
     }

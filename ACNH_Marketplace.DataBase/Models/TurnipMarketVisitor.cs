@@ -20,28 +20,28 @@ namespace ACNH_Marketplace.DataBase.Models
         public Guid Id { get; set; }
 
         /// <summary>
-        /// Gets or sets turnip market description.
-        /// </summary>
-        public string Description { get; set; }
-
-        /// <summary>
         /// Gets or sets hosters lower bounds for turnip price.
         /// </summary>
         public int PriceLowerBound { get; set; }
 
         /// <summary>
-        /// Gets or sets visitors <see cref="User"/> id.
+        /// Gets or sets turnip application description.
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// Gets or sets application's <see cref="User"/> id.
         /// </summary>
         public Guid UserId { get; set; }
 
         /// <summary>
-        /// Gets or sets visitors <see cref="User"/> object.
+        /// Gets or sets application's <see cref="User"/> object.
         /// </summary>
         public User User { get; set; }
 
         /// <summary>
-        /// Gets or sets collection of <see cref="Fee"/> to enter island.
+        /// Gets or sets collection of <see cref="EntryFees"/> to enter island.
         /// </summary>
-        public IList<EntryFee> Fee { get; set; }
+        public IList<TurnipMarketEntryFee> EntryFees { get; set; }
     }
 }

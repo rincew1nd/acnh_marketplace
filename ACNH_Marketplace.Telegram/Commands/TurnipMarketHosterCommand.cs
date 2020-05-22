@@ -19,6 +19,7 @@ namespace ACNH_Marketplace.Telegram.Commands
     using ACNH_Marketplace.Telegram.Services.BotService;
     using global::Telegram.Bot.Types.ReplyMarkups;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Metadata.Internal;
     using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
     /// <summary>
@@ -62,6 +63,11 @@ namespace ACNH_Marketplace.Telegram.Commands
                 return OperationExecutionResult.Success;
             }
 
+            if (update.Command == "/DeleteTMH")
+            {
+                await this.DeleteTMH();
+            }
+
             if (update.Command == "/HosterCode")
             {
                 await this.SendHosterCode();
@@ -98,7 +104,8 @@ namespace ACNH_Marketplace.Telegram.Commands
             }
 
             var tmh = this.Context.TurnipMarketHosters
-                .Where(tmh => tmh.UserId == this.Update.UserContext.UserId)
+                .Where(tmh => tmh.UserId == this.Update.UserContext.UserId &&
+                              tmh.ExpirationDate > DateTime.Now)
                 .Take(10)
                 .OrderBy(tmh => tmh.ExpirationDate);
 
@@ -109,7 +116,7 @@ namespace ACNH_Marketplace.Telegram.Commands
                 {
                     new InlineKeyboardButton()
                     {
-                        Text = $"{tmhInfo.ExpirationDate.ToUserDate(this.Update.UserContext.Timezone)}. Turnip cost {tmhInfo.Price}",
+                        Text = $"{tmhInfo.ExpirationDate.ToUserDate(this.Update.UserContext.Timezone)}. Turnip price {tmhInfo.Price}",
                         CallbackData = $"/ManageTMH {tmhInfo.Id}",
                     },
                 });
@@ -130,7 +137,7 @@ namespace ACNH_Marketplace.Telegram.Commands
         private async Task ManageTMH(Guid id)
         {
             var tmh = await this.Context.TurnipMarketHosters
-                .Include(tmh => tmh.Fee)
+                .Include(tmh => tmh.EntryFees)
                 .FirstOrDefaultAsync(tmh => tmh.Id == id);
 
             if (tmh == null)
@@ -145,7 +152,7 @@ namespace ACNH_Marketplace.Telegram.Commands
             sb.AppendLine($"Turnip price - {tmh.Price}");
             sb.AppendLine($"Description - {tmh.Description}");
             sb.AppendLine($"Entry fee:");
-            foreach (var fee in tmh.Fee)
+            foreach (var fee in tmh.EntryFees)
             {
                 sb.AppendLine($"\t\t{fee.FeeType.GetDescription()} {fee.Count} ({fee.Description})");
             }
@@ -154,30 +161,35 @@ namespace ACNH_Marketplace.Telegram.Commands
 
             this.Update.UserContext.SetContext("TMHId", id);
 
+            var keyboard = new List<Tuple<string, string>[]>()
+            {
+                new[]
+                {
+                    new Tuple<string, string>("/ChangeDate", "Change market date"),
+                    new Tuple<string, string>("/ChangePrice", "Change turnip price"),
+                },
+                new[]
+                {
+                    new Tuple<string, string>("/ChangeDescription", "Change description"),
+                    new Tuple<string, string>("/ChangeEntryFee", "Change entry fee"),
+                },
+                new[]
+                {
+                    new Tuple<string, string>($"/DeleteTMH", "Delete market record"),
+                    new Tuple<string, string>("/BackManageTMH", "<- Back"),
+                },
+            };
+
+            if (tmh.BeginingDate <= DateTime.Now)
+            {
+                keyboard.Add(new[] { new Tuple<string, string>($"/FindVisitor {tmh.Id}", "Find visitors") });
+            }
+
             await this.Client.EditMessageAsync(
                 this.Update.UserContext.TelegramId,
                 this.Update.MessageId,
                 sb.ToString(),
-                new InlineKeyboardMarkup(
-                    new[]
-                    {
-                        new[]
-                        {
-                            new InlineKeyboardButton() { CallbackData = "/ChangeDate", Text = "Change market date" },
-                            new InlineKeyboardButton() { CallbackData = "/ChangePrice", Text = "Change turnip price" },
-                        },
-                        new[]
-                        {
-                            new InlineKeyboardButton() { CallbackData = "/ChangeDescription", Text = "Change description" },
-                            new InlineKeyboardButton() { CallbackData = "/ChangeEntryFee", Text = "Change entry fee" },
-                        },
-                        new[]
-                        {
-                            new InlineKeyboardButton() { CallbackData = $"/FindVisitor {tmh.Id}", Text = "Find visitors" },
-                            new InlineKeyboardButton() { CallbackData = "/HosterCode", Text = "Get hoster code" },
-                        },
-                        new[] { new InlineKeyboardButton() { CallbackData = "/BackManageTMH", Text = "<- Back" } },
-                    }));
+                CommandHelper.BuildKeyboard(keyboard.ToArray()));
         }
 
         private async Task CreateTMH()
@@ -310,10 +322,21 @@ namespace ACNH_Marketplace.Telegram.Commands
             var dateStr = this.Update.Command.Replace("AM", "12").Replace("PM", "22");
             if (!DateTime.TryParseExact(dateStr, "dd.MM.yyyy HH", null, DateTimeStyles.None, out var date))
             {
-                await this.Client.EditMessageAsync(
+                await this.Client.EditMessageAsync( 
                     this.Update.UserContext.TelegramId,
                     this.Update.MessageId,
                     $"Invalid date format '{dateStr}' != 'dd.MM.yyyy AM/PM'.");
+                await this.EnteringDate();
+                return false;
+            }
+
+            var serverDate = DateTimeConverter.ToServerDate(date, this.Update.UserContext.Timezone);
+            if (serverDate < DateTime.Now || !serverDate.IsSameWeek())
+            {
+                await this.Client.EditMessageAsync(
+                    this.Update.UserContext.TelegramId,
+                    this.Update.MessageId,
+                    $"Date ({date:dd.MM.yyyy HH} (UTC{this.Update.UserContext.Timezone})) can not be in the past and should be on the same week as current date.");
                 await this.EnteringDate();
                 return false;
             }
@@ -399,6 +422,25 @@ namespace ACNH_Marketplace.Telegram.Commands
             this.Update.UserContext.RemoveContext("HosterDescription");
 
             return tmh.Id;
+        }
+
+        private async Task DeleteTMH()
+        {
+            var tmhId = this.Update.UserContext.GetContext<Guid?>("TMHId");
+
+            if (tmhId.HasValue)
+            {
+                var tmh = await this.Context.TurnipMarketHosters
+                    .Include(tmh => tmh.EntryFees)
+                    .FirstOrDefaultAsync(tmh => tmh.Id == tmhId && tmh.UserId == this.Update.UserContext.UserId);
+                if (tmh != null)
+                {
+                    this.Context.Remove(tmh);
+                    await this.Context.SaveChangesAsync();
+
+                    this.Update.UserContext.RemoveContext("TMHId");
+                }
+            }
         }
         #endregion
     }
